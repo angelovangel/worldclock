@@ -6,7 +6,7 @@ library(ROpenWeatherMap)
 library(apputils)
 
 tzdbnames <- c(Sys.timezone(), clock::tzdb_names() )
-api_key <- "d6fda02de470fbd4c32ce6223301a942"
+
 
 # Define UI for displaying current time ----
 ui <- dashboardPage(skin = "black",

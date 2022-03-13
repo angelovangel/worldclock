@@ -3,6 +3,7 @@
 require(magrittr)
 require(anytime)
 require(ROpenWeatherMap)
+source("config")
 
 # input is time zone as in tzdb
 # output is a list with data
