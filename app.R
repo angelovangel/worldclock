@@ -2,11 +2,15 @@ library(shiny)
 library(clock)
 library(dplyr)
 library(shinydashboard)
+library(ROpenWeatherMap)
+library(apputils)
 
 tzdbnames <- c(Sys.timezone(), clock::tzdb_names() )
+api_key <- "d6fda02de470fbd4c32ce6223301a942"
 
 # Define UI for displaying current time ----
 ui <- dashboardPage(skin = "black",
+  
   dashboardHeader(),
   dashboardSidebar(
     fluidRow(
@@ -26,10 +30,14 @@ ui <- dashboardPage(skin = "black",
     collapsed = FALSE
   ),
   dashboardBody(
+    apputils::use_apputils(),
+    
     #h2("World clock"),
     tags$hr(),
-    valueBoxOutput("ibox1", width = 4),
+    fluidRow(
+    valueBoxOutput("ibox1", width = 12)),
     tags$div(id = "placeholder_VB")
+    
     
     # fluidRow(
     #   column(width = 4,
@@ -59,20 +67,35 @@ server <- function(input, output, session) {
     mydiff <- difftime(as_naive_time(mytime), Sys.time(), unit = "hours") %>% 
       trunc() %>%
       as.numeric()
-    myicon <- ifelse(between(get_hour(as.POSIXct(mytime)), 7, 20), "sun", "moon")
+    
+    myweather <- get_weather(timeZone)
+    
+    iconurl<- get_weather_icon(myweather$iconcode)
+      
+    myvalue <- tags$p(
+      paste0(
+      format.POSIXct(as_date_time(mytime), format = "%H:%M")," | ",
+      myweather$temp, " | ", myweather$weather
+      ),  
+    style = "font-size: 70%;" # tags$p() used to change font size
+    )
+    
+    mysubtitle <- paste0(
+      timeZone, " ", 
+      format.POSIXct(as_date_time(mytime), format = "%Y-%m-%d"), " ", 
+      formatC(mydiff, flag = "+"), "h", " ",
+      " ↑", myweather$sunrise, " ↓", myweather$sunset
+    )
+    
     
     return(
         
-        valueBox(width = 4, 
-                 value = paste0(
-        format.POSIXct(as_date_time(mytime), format = "%H:%M:%S"), " (", formatC(mydiff, flag = "+"), " h)"
-        ),
-      subtitle = paste0(
-        timeZone, " ", format.POSIXct(as_date_time(mytime), format = "%Y-%m-%d")
-        ),
+        apputils::valueBox(width = 12, #apputils for custom icons
+                 value = myvalue,
+                 subtitle = mysubtitle,
       color = ifelse(between(get_hour(as.POSIXct(mytime)), 7, 20), "orange", "blue"),
-      icon = icon(myicon)
-      
+      icon = apputils::icon(list(src = iconurl, width = "80px"), 
+                            lib = "local")
       )
      
     )
@@ -100,13 +123,19 @@ server <- function(input, output, session) {
     )
     
     insertUI(
-      selector = "#placeholder_VB",
+      selector = "#placeholder_VB", 
+      where = "beforeEnd",
       ui = tags$div(
             #make_valuebox(""),
             #valueBoxOutput(id_vbox, width = 4),
+            # renderText({ 
+            #   invalidateLater(10000, session)
+            #   myweather <- get_weather(input[[id_selectize]])
+            #   paste0("Sunrise: ", myweather$sunrise, " Sunset: ", myweather$sunset, " Weather: ", myweather$weather)
+            # }),
             renderValueBox({
-              invalidateLater(1000, session)
-              make_valuebox(input[[id_selectize]])
+              invalidateLater(5000, session)
+              make_valuebox(input[[id_selectize]]) # don't know why but this works and input$id_selectize not
             }),
           
           id = id_vbox
