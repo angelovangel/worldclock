@@ -28,7 +28,7 @@ css = HTML("
 ########################### UI ##########################
 ui <- dashboardPage(skin = "black",
   
-  dashboardHeader(),
+  dashboardHeader(title = "Worldclock"),
   dashboardSidebar(
     fluidRow(
       column(width = 6,
@@ -39,12 +39,12 @@ ui <- dashboardPage(skin = "black",
     tags$hr(),
     selectizeInput(
       "timeZone1",
-      label = "Time zone 1",
+      label = "Your time zone",
       choices = tzdbnames,
       selected = 1
       ), 
     tags$div(id = "placeholder_S"),
-    collapsed = FALSE
+    collapsed = TRUE
   ),
   
   dashboardBody(
@@ -142,7 +142,7 @@ server <- function(input, output, session) {
       ui = tags$div(
         selectizeInput(
           inputId = id_selectize,
-          label = paste0("Time zone ", input$insertBtn),
+          label = paste0("Time zone ", input$insertBtn + 1),
           choices = tzdbnames,
           selected = tzdbnames[0]), 
         id = id_selectize
@@ -178,8 +178,8 @@ server <- function(input, output, session) {
     )
     )
     
-    inserted_VB <<- c(id_vbox, inserted_VB)
-    inserted_S <<- c(id_selectize, inserted_S)
+    inserted_VB <<- c(inserted_VB, id_vbox)
+    inserted_S <<- c(inserted_S, id_selectize)
   })
   
   observeEvent(input$removeBtn, {
