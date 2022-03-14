@@ -5,6 +5,9 @@ library(shinydashboard)
 library(ROpenWeatherMap)
 library(apputils)
 
+source("global.R")
+
+
 tzdbnames <- c(Sys.timezone(), clock::tzdb_names() )
 
 
@@ -65,7 +68,7 @@ server <- function(input, output, session) {
     mytime <- zoned_time_now(timeZone)
     #mydiff <- time_point_count_between(as_naive_time(Sys.time()), as_naive_time(mytime), precision = "hour")
     mydiff <- difftime(as_naive_time(mytime), Sys.time(), unit = "hours") %>% 
-      trunc() %>%
+      ceiling() %>%
       as.numeric()
     
     myweather <- get_weather(timeZone)
@@ -84,7 +87,7 @@ server <- function(input, output, session) {
       timeZone, " ", 
       format.POSIXct(as_date_time(mytime), format = "%Y-%m-%d"), " ", 
       formatC(mydiff, flag = "+"), "h", " ",
-      " ↑", myweather$sunrise, " ↓", myweather$sunset
+      " ↑", format.POSIXct(myweather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(myweather$sunset, format = "%H:%M")
     )
     
     
@@ -134,8 +137,13 @@ server <- function(input, output, session) {
             #   paste0("Sunrise: ", myweather$sunrise, " Sunset: ", myweather$sunset, " Weather: ", myweather$weather)
             # }),
             renderValueBox({
+              
               invalidateLater(5000, session)
+              validate(
+                need(input[[id_selectize]] != "", "Please select a time zone")
+              )
               make_valuebox(input[[id_selectize]]) # don't know why but this works and input$id_selectize not
+              
             }),
           
           id = id_vbox
@@ -162,7 +170,10 @@ server <- function(input, output, session) {
   
   
   output$ibox1 <- renderValueBox({
-    invalidateLater(1000, session)
+    invalidateLater(5000, session)
+    validate(
+      need(input$timeZone1 != "", "Please select a time zone")
+    )
     make_valuebox(input$timeZone1)
   })
   
