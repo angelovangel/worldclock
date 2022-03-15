@@ -30,7 +30,17 @@ get_weather <- function(timeZone) {
     )
   )
   } else {
-    stop("City not found")
+  return(
+    list(
+      sunrise = anytime(00:00:00),
+      sunset = anytime(00:00:00),
+      temp = "",
+      weather = "",
+      iconcode = "",
+      city = ""
+      
+    )
+  )
     }
   
 }
