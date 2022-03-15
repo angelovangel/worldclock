@@ -58,19 +58,6 @@ ui <- dashboardPage(skin = "black",
     valueBoxOutput("ibox1", width = 12)),
     tags$div(id = "placeholder_VB")
     
-    
-    # fluidRow(
-    #   column(width = 4,
-    #          valueBoxOutput("ibox1", width = 12)
-    #          ),
-    #   column(width = 4, 
-    #          valueBoxOutput("ibox2", width = 12)
-    #          ),
-    #   column(width = 4, 
-    #          valueBoxOutput("ibox3", width = 12)
-    #   )
-    # )
-    
   )
   )
 
@@ -95,9 +82,9 @@ server <- function(input, output, session) {
       
     myvalue <- tags$p(
       paste0(
-      format.POSIXct(as_date_time(mytime), format = "%H:%M")," | ",
-      myweather$city, " | ",
-      myweather$temp, " | ", myweather$weather
+      format.POSIXct(as_date_time(mytime), format = "%H:%M")," ",
+      myweather$city, " ",
+      myweather$temp, " ", myweather$weather
       ),  
     style = "font-size: 50%; color: #D7DBDD;" # tags$p() used to change font size
     )
@@ -106,10 +93,10 @@ server <- function(input, output, session) {
       paste0(
       timeZone, " ", 
       format.POSIXct(as_date_time(mytime), format = "%Y-%m-%d"), " ", 
-      formatC(mydiff, flag = "+"), "h", " ",
+      formatC(mydiff, flag = "+"), "HRS", " ",
       " ↑", format.POSIXct(myweather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(myweather$sunset, format = "%H:%M")
       ),
-    style = "font-size: 100%; color: #D7DBDD;"
+    style = "font-size: 90%; color: #D7DBDD;"
     )
     
     
@@ -121,7 +108,7 @@ server <- function(input, output, session) {
                  
                  
       #color = ifelse(between(get_hour(as.POSIXct(mytime)), 7, 20), "light-blue", "black"),
-      icon = apputils::icon(list(src = iconurl, width = "60px"), 
+      icon = apputils::icon(list(src = iconurl, width = "50px"), 
                             lib = "local")
       )
      
