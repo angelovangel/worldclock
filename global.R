@@ -40,7 +40,7 @@ get_weather <- function(timeZone) {
       sunset = anytime(00:00:00),
       temp = "",
       weather = "",
-      iconcode = "",
+      iconcode = "", #fallback icon
       city = ""
       
     )
@@ -50,8 +50,13 @@ get_weather <- function(timeZone) {
 }
 
 get_weather_icon <- function(iconcode) {
-  baseurl <- "http://openweathermap.org/img/wn/"
-  paste0(baseurl, iconcode, "@2x.png")
+  # fallback in case nothing was fetched by get_weather
+  if(iconcode == "") {
+    "https://raw.githubusercontent.com/framework7io/framework7-icons/master/src/sf/clear_fill.svg"
+  } else {
+    baseurl <- "http://openweathermap.org/img/wn/"
+    paste0(baseurl, iconcode, "@2x.png")
+  }
 }
 
 insertListItem <- function(tz) {
@@ -69,7 +74,8 @@ insertListItem <- function(tz) {
   insertUI(
     selector = "#mylist",
     ui = tags$div( id = paste0("item_", city ),
-                  f7ListItem(paste0(city, " | ", weather$temp), right = "bla", 
+                  f7ListItem( paste0(weather$temp, weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
+                             right = city, 
                              media = apputils::icon(list(src = iconurl, width = "50px"), lib = "local"), 
                              title = tags$p(style = "font-family: Arial", mytime) )
       
