@@ -64,7 +64,7 @@ insertListItem <- function(tz) {
   mytime <- renderText({
     invalidateLater(1000)
     zoned_time <- clock::zoned_time_now(tz)
-    format.POSIXct(as_date_time(zoned_time), format = "%H:%M:%S")
+    format.POSIXct(as_date_time(zoned_time), format = "%H:%M")
   })
   
   city <- get_city(tz)
@@ -74,7 +74,8 @@ insertListItem <- function(tz) {
   insertUI(
     selector = "#mylist",
     ui = tags$div( id = paste0("item_", city ),
-                  f7ListItem( paste0(weather$temp, weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
+                  f7ListItem(paste0(weather$temp, " ",weather$weather),
+                             #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
                              right = city, 
                              media = apputils::icon(list(src = iconurl, width = "50px"), lib = "local"), 
                              title = tags$p(style = "font-family: Arial", mytime) )
