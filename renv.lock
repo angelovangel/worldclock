@@ -793,6 +793,20 @@
         "shiny"
       ]
     },
+    "shinyMobile": {
+      "Package": "shinyMobile",
+      "Version": "0.9.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "2d2c956787627a19fb3319173b7e929f",
+      "Requirements": [
+        "htmltools",
+        "httr",
+        "jsonlite",
+        "magrittr",
+        "shiny"
+      ]
+    },
     "shinydashboard": {
       "Package": "shinydashboard",
       "Version": "0.7.2",
