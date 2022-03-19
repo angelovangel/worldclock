@@ -54,3 +54,20 @@ get_weather_icon <- function(iconcode) {
   paste0(baseurl, iconcode, "@2x.png")
 }
 
+insertListItem <- function(tz) {
+  
+  mytime <- renderText({
+    invalidateLater(1000)
+    zoned_time <- clock::zoned_time_now(tz)
+    format.POSIXct(as_date_time(zoned_time), format = "%H:%M:%S")
+  })
+  city <- get_city(tz)
+  
+  insertUI(
+    selector = "#mylist",
+    ui = tags$div( id = paste0("item_", city ),
+                  f7ListItem(city, title = tags$p(style = "font-family: Arial", mytime) )
+      
+    )
+  )
+}

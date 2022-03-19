@@ -38,11 +38,23 @@ ui <- f7Page(
                     inputId = "selectTZ", 
                     label = "Select time zone", 
                     choices = tzdbnames, 
-                    selected = tzdbnames[0],
+                    selected = NULL,
                     openIn = "popup", 
                     multiple = FALSE, 
                     closeOnSelect = TRUE, 
                     popupCloseLinkText = "Cancel"), 
+      
+      # this will track currently active list elements and will be used in removeItem action
+      f7SmartSelect(virtualList = TRUE, # because of the many elements in the list
+                    inputId = "selectTZcurrent", 
+                    label = "Select items to remove", 
+                    choices = Sys.timezone(), 
+                    selected = NULL,
+                    openIn = "popup", 
+                    multiple = FALSE, 
+                    closeOnSelect = TRUE, 
+                    popupCloseLinkText = "Cancel"),
+      
       #tags$hr(),tags$br(),
       hairline = TRUE, shadow = TRUE
     ),
@@ -75,6 +87,7 @@ server <- function(input, output, session) {
   
   # hide the smart select, use shinyjs to emulate click on it when + is pressed
   shinyjs::hide(id = "selectTZ")
+  shinyjs::hide(id = "selectTZcurrent")
   # show on edit only
   shinyjs::hide(id = "appendItem")
   shinyjs::hide(id = "removeItem")
@@ -97,11 +110,22 @@ server <- function(input, output, session) {
   observeEvent(input$appendItem, {
       shinyjs::click(id = "selectTZ")
   })
+  # emulate click on current items list
+  observeEvent(input$removeItem, {
+      shinyjs::click(id = "selectTZcurrent")
+  })
+  
+  #  track current list status
+  currList <- tzdbnames[c(433, 322, 170)] # Berlin, Tokyo, New York
+  
+  # start with a list of 3 time zones, otherwise strange things happen with the smartselect input
+  lapply(currList, function(x) {
+    insertListItem(tz = x)
+  } )
   
   # insertUI when selected
   observeEvent(input$selectTZ, {
       selection <- input$selectTZ
-      
       mytime <- renderText({
          invalidateLater(1000, session)
          zoned_time <- clock::zoned_time_now(selection)
@@ -115,18 +139,33 @@ server <- function(input, output, session) {
         # ui = f7Swipeout(
         #         tag = f7ListItem("two"), side = "right", f7SwipeoutItem(id = "del2", color = "pink", "Delete")
         #       )
-        ui = tags$div(id = paste0( "item", "_", get_city(input$selectTZ) ),
-                      f7ListItem(weatherdata$city, title = tags$p(style = "font-family: Arial", mytime))
+        ui = tags$div(id = paste0( "item", "_", get_city(input$selectTZ) ), #careful here the tag is city only!!
+                      f7ListItem(weatherdata$city,
+                                 title = tags$p(style = "font-family: Arial", mytime))
+                                 
                       )  
         )
+       # finally, update selectTZcurrent list
+      
+       currList <<- c(currList, selection)
+       shinyMobile::updateF7SmartSelect(inputId = "selectTZcurrent", choices = currList)
+       print(paste0("ins-", selection))
   })
   
-  observeEvent(input$removeItem, {
+  # actually remove items
+  observeEvent(input$selectTZcurrent, {
+    selection <- input$selectTZcurrent
     removeUI(
-      selector = paste0("#item", "_", get_city(input$selectTZ) ), 
+      selector = paste0("#item", "_", get_city(input$selectTZcurrent)), # careful here id is the city only 
       multiple = TRUE
     )
+    # and update reactive and list
+    
+    currList <<- currList[ -length(currList) ] # strip last
+    shinyMobile::updateF7SmartSelect(inputId = "selectTZcurrent", choices = currList)
+    print(paste0("del-", selection))
   })
+  
   
   
   # main server
