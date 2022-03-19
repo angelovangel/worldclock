@@ -61,12 +61,17 @@ insertListItem <- function(tz) {
     zoned_time <- clock::zoned_time_now(tz)
     format.POSIXct(as_date_time(zoned_time), format = "%H:%M:%S")
   })
+  
   city <- get_city(tz)
+  weather <- get_weather(tz) # make reactive to invalidate?
+  iconurl <- get_weather_icon(weather$iconcode)
   
   insertUI(
     selector = "#mylist",
     ui = tags$div( id = paste0("item_", city ),
-                  f7ListItem(city, title = tags$p(style = "font-family: Arial", mytime) )
+                  f7ListItem(paste0(city, " | ", weather$temp), right = "bla", 
+                             media = apputils::icon(list(src = iconurl, width = "50px"), lib = "local"), 
+                             title = tags$p(style = "font-family: Arial", mytime) )
       
     )
   )

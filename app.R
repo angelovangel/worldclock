@@ -126,30 +126,14 @@ server <- function(input, output, session) {
   # insertUI when selected
   observeEvent(input$selectTZ, {
       selection <- input$selectTZ
-      mytime <- renderText({
-         invalidateLater(1000, session)
-         zoned_time <- clock::zoned_time_now(selection)
-         format.POSIXct(as_date_time(zoned_time), format = "%H:%M")
-      })
-       
-       weatherdata <- get_weather(input$selectTZ)
-       
-       insertUI(
-        selector = "#mylist", 
-        # ui = f7Swipeout(
-        #         tag = f7ListItem("two"), side = "right", f7SwipeoutItem(id = "del2", color = "pink", "Delete")
-        #       )
-        ui = tags$div(id = paste0( "item", "_", get_city(input$selectTZ) ), #careful here the tag is city only!!
-                      f7ListItem(weatherdata$city,
-                                 title = tags$p(style = "font-family: Arial", mytime))
-                                 
-                      )  
-        )
-       # finally, update selectTZcurrent list
       
-       currList <<- c(currList, selection)
-       shinyMobile::updateF7SmartSelect(inputId = "selectTZcurrent", choices = currList)
-       print(paste0("ins-", selection))
+      insertListItem(selection)
+      
+      # finally, update selectTZcurrent list
+      
+      currList <<- c(currList, selection)
+      shinyMobile::updateF7SmartSelect(inputId = "selectTZcurrent", choices = currList)
+      print(paste0("ins-", selection))
   })
   
   # actually remove items
@@ -162,6 +146,7 @@ server <- function(input, output, session) {
     # and update reactive and list
     
     currList <<- currList[ -length(currList) ] # strip last
+    
     shinyMobile::updateF7SmartSelect(inputId = "selectTZcurrent", choices = currList)
     print(paste0("del-", selection))
   })
