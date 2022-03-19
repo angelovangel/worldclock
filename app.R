@@ -60,8 +60,8 @@ ui <- f7Page(
     ),
     # main
     f7Segment(
-      f7Button("edit", "Edit" , color = "black"),
-      f7Button("done", "Done", color = "black"), 
+      f7Button("edit", "Edit" , color = "black", size = "small"),
+      f7Button("done", "Done", color = "black", size = "small"), 
     container = "segment"),
     
     f7Segment(
