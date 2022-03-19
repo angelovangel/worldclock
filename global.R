@@ -6,6 +6,10 @@ require(ROpenWeatherMap)
 
 api_key <- Sys.getenv("api_key")
 
+# get city from time zone
+get_city <- function(timeZone) {
+  strsplit(timeZone, "/") %>% unlist() %>% tail(1) %>% gsub("_", "+", .)
+}
 
 # input is time zone as in tzdb
 # output is a list with data
