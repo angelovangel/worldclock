@@ -72,8 +72,9 @@ insertListItem <- function(tz) {
   iconurl <- get_weather_icon(weather$iconcode)
   
   insertUI(
-    selector = "#mylist",
+    selector = "#mylist", where = "beforeEnd",
     ui = tags$div( id = paste0("item_", city),
+              f7Swipeout(
                   f7ListItem(paste0(weather$temp, " ",weather$weather),
                              #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
                              right = city %>% str_replace("_", " "),  
@@ -81,7 +82,8 @@ insertListItem <- function(tz) {
                              title = tags$h3(
                                style = "font-family: Arial;", mytime)
                              )
-      
+                 # f7SwipeoutItem(id = paste0("swipe_", city), color = "pink", "Alert")
+              )
     )
   )
 }
