@@ -5,12 +5,14 @@ library(dplyr)
 library(ROpenWeatherMap)
 library(apputils)
 library(shinyjs)
+library(stringr)
 
 library(shinyMobile)
 source("global.R")
 
 
 tzdbnames <- c(Sys.timezone(), clock::tzdb_names() )
+
 
 ########################### CSS ##########################
 css = HTML("
@@ -30,43 +32,37 @@ css = HTML("
 ui <- f7Page(
   useShinyjs(),
   
+  skin = "ios",
   title = "World Clock",
   f7SingleLayout(
-    navbar = f7Navbar(
-      title = "World Clock",
-      f7SmartSelect(virtualList = TRUE, # because of the many elements in the list
-                    inputId = "selectTZ", 
-                    label = "Select time zone", 
-                    choices = tzdbnames, 
-                    selected = NULL,
-                    openIn = "popup", 
-                    multiple = FALSE, 
-                    closeOnSelect = TRUE, 
-                    popupCloseLinkText = "Cancel"), 
-      
-      # this will track currently active list elements and will be used in removeItem action
-      f7SmartSelect(virtualList = TRUE, # because of the many elements in the list
-                    inputId = "selectTZcurrent", 
-                    label = "Select items to remove", 
-                    choices = Sys.timezone(), 
-                    selected = NULL,
-                    openIn = "popup", 
-                    multiple = FALSE, 
-                    closeOnSelect = TRUE, 
-                    popupCloseLinkText = "Cancel"),
-      
-      #tags$hr(),tags$br(),
-      hairline = TRUE, shadow = TRUE
-    ),
+    navbar = NULL,
     # main
+    f7SmartSelect(#virtualList = TRUE, # because of the many elements in the list
+                  inputId = "selectTZ", 
+                  label = "Select time zone", 
+                  choices = tzdbnames, 
+                  selected = 1,
+                  openIn = "popup", 
+                  multiple = FALSE, 
+                  closeOnSelect = TRUE, 
+                  popupCloseLinkText = "Cancel"),
+    f7SmartSelect(#virtualList = TRUE, # because of the many elements in the list
+                  inputId = "selectTZcurrent", 
+                  label = "Select items to remove", 
+                  choices = tzdbnames[c(433, 322, 170)], 
+                  selected = 1,
+                  openIn = "popup", 
+                  multiple = FALSE, 
+                  closeOnSelect = TRUE, 
+                  popupCloseLinkText = "Cancel"),
     f7Segment(
-      f7Button("edit", "Edit" , color = "black", size = "small"),
+      f7Button("edit", "Edit", color = "black", size = "small"),
       f7Button("done", "Done", color = "black", size = "small"), 
     container = "segment"),
     
     f7Segment(
-      f7Button("appendItem", "+", color = "gray"),
-      f7Button("removeItem", "-", color = "gray"),
+      f7Button("appendItem", label = f7Icon("plus") , color = "gray", size = "small"),
+      f7Button("removeItem", label = f7Icon("minus"), color = "gray", size = "small"),
     container = "row"),
     
     #uiOutput("addedItems"),
@@ -88,6 +84,7 @@ server <- function(input, output, session) {
   # hide the smart select, use shinyjs to emulate click on it when + is pressed
   shinyjs::hide(id = "selectTZ")
   shinyjs::hide(id = "selectTZcurrent")
+  
   # show on edit only
   shinyjs::hide(id = "appendItem")
   shinyjs::hide(id = "removeItem")
@@ -124,7 +121,7 @@ server <- function(input, output, session) {
   } )
   
   # insertUI when selected
-  observeEvent(input$selectTZ, {
+  observeEvent(input$selectTZ, ignoreInit = TRUE, {
       selection <- input$selectTZ
       
       insertListItem(selection)
@@ -132,23 +129,28 @@ server <- function(input, output, session) {
       # finally, update selectTZcurrent list
       
       currList <<- c(currList, selection)
-      shinyMobile::updateF7SmartSelect(inputId = "selectTZcurrent", choices = currList)
-      print(paste0("ins-", selection))
+      shinyMobile::updateF7SmartSelect(inputId = "selectTZcurrent", choices = currList, selected = NULL)
+      print(paste0("ins-", currList))
   })
   
   # actually remove items
-  observeEvent(input$selectTZcurrent, {
+  observeEvent(input$selectTZcurrent, ignoreInit = TRUE, {
     selection <- input$selectTZcurrent
+    city <- get_city(input$selectTZcurrent) %>% str_replace("\\+", "_")
+    
     removeUI(
-      selector = paste0("#item", "_", get_city(input$selectTZcurrent)), # careful here id is the city only 
-      multiple = TRUE
+      selector = paste0("#item", "_", city), # careful here id is the city only 
+      multiple = FALSE
     )
-    # and update reactive and list
+    # and update list
     
-    currList <<- currList[ -length(currList) ] # strip last
+    myindex <- which(str_detect(selection, currList))
+    currList <<- currList[-myindex] # strip last
     
-    shinyMobile::updateF7SmartSelect(inputId = "selectTZcurrent", choices = currList)
-    print(paste0("del-", selection))
+    print(paste0("del-", currList))
+    
+    shinyMobile::updateF7SmartSelect(inputId = "selectTZcurrent", choices = currList, selected = NULL)
+    
   })
   
   

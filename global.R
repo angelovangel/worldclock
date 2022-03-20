@@ -27,8 +27,8 @@ get_weather <- function(timeZone) {
       sunrise = anytime(myweather$sys$sunrise, tz = timeZone),
       sunset = anytime(myweather$sys$sunset, tz = timeZone),
       temp = paste0( round(myweather$main$temp - 273.15, 1), "˚"),
-      weather = myweather$weather$main,
-      iconcode = myweather$weather$icon,
+      weather = myweather$weather$main[1], #sometimes more than 1 are returned
+      iconcode = myweather$weather$icon[1],
       city = myweather$name
       
     )
@@ -64,21 +64,23 @@ insertListItem <- function(tz) {
   mytime <- renderText({
     invalidateLater(1000)
     zoned_time <- clock::zoned_time_now(tz)
-    format.POSIXct(as_date_time(zoned_time), format = "%H:%M")
+    format.POSIXct(as_date_time(zoned_time), format = "%H:%M:%S")
   })
   
-  city <- get_city(tz)
+  city <- get_city(tz) %>% str_replace("\\+", "_") # replace + again to _ to use in id
   weather <- get_weather(tz) # make reactive to invalidate?
   iconurl <- get_weather_icon(weather$iconcode)
   
   insertUI(
     selector = "#mylist",
-    ui = tags$div( id = paste0("item_", city ),
+    ui = tags$div( id = paste0("item_", city),
                   f7ListItem(paste0(weather$temp, " ",weather$weather),
                              #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
-                             right = city, 
+                             right = city %>% str_replace("_", " "),  
                              media = apputils::icon(list(src = iconurl, width = "50px"), lib = "local"), 
-                             title = tags$p(style = "font-family: Arial", mytime) )
+                             title = tags$h3(
+                               style = "font-family: Arial;", mytime)
+                             )
       
     )
   )
