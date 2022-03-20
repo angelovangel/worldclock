@@ -62,9 +62,9 @@ get_weather_icon <- function(iconcode) {
 insertListItem <- function(tz) {
   
   mytime <- renderText({
-    invalidateLater(1000)
+    invalidateLater(2000)
     zoned_time <- clock::zoned_time_now(tz)
-    format.POSIXct(as_date_time(zoned_time), format = "%H:%M:%S")
+    format.POSIXct(as_date_time(zoned_time), format = "%H:%M")
   })
   
   city <- get_city(tz) %>% str_replace("\\+", "_") # replace + again to _ to use in id

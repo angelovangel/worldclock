@@ -12,21 +12,7 @@ source("global.R")
 
 
 tzdbnames <- c(Sys.timezone(), clock::tzdb_names() )
-
-
-########################### CSS ##########################
-css = HTML("
-  .colorday .small-box {
-    background-color: #7B7D7D !important;
-  }
-  .colornight .small-box {
-    background-color: #17202A !important;
-  }
-  .content-wrapper {
-    background-color: #17202A;
-  }
-")
-
+secret_text <- Sys.getenv("secret_text")
 
 ########################### UI ##########################
 ui <- f7Page(
@@ -125,7 +111,9 @@ server <- function(input, output, session) {
       selection <- input$selectTZ
       
       insertListItem(selection)
-      
+      if(selection == "Asia/Dubai") {
+          f7Toast(text = secret_text, position = "center", closeButton = F, closeTimeout = 3000, icon = f7Icon("heart"))
+      }
       # finally, update selectTZcurrent list
       
       currList <<- c(currList, selection)
