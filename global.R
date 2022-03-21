@@ -4,49 +4,64 @@ require(magrittr)
 require(anytime)
 require(ROpenWeatherMap)
 
+
 api_key <- Sys.getenv("api_key")
+
+# get city id from smartselect input
+# input is smartselect value (Sofia, BG) and data is the cities dataframe
+get_cityid <- function(input, data) {
+  data[data$value %in% input, ]$id
+}
 
 # get city from time zone
 get_city <- function(timeZone) {
   strsplit(timeZone, "/") %>% unlist() %>% tail(1) %>% gsub("_", "+", .)
 }
 
-# input is time zone as in tzdb
+# input is time zone as in tzdb or cityID (openweathermap id)
 # output is a list with data
-get_weather <- function(timeZone) {
+get_weather <- function(input) {
   
-  #get city name
-  mycity <- strsplit(timeZone, "/") %>% unlist() %>% tail(1) %>% gsub("_", "+", .) # get_current_weather uses + instead of _
-  myweather <- ROpenWeatherMap::get_current_weather(api_key, city = mycity)
-                                      
+  # if input is id
+  if(is.numeric(input)) {
+    myweather <- ROpenWeatherMap::get_current_weather(api_key, cityID = input)
+  } else {
+    #get city name
+    mycity <- strsplit(input, "/") %>% unlist() %>% tail(1) %>% gsub("_", "+", .) # get_current_weather uses + instead of _
+    myweather <- ROpenWeatherMap::get_current_weather(api_key, city = mycity)
+  }
+    
   # return only if data fetched OK
   if(myweather$cod == 200) {
     
-  return(
-    list(
-      sunrise = anytime(myweather$sys$sunrise, tz = timeZone),
-      sunset = anytime(myweather$sys$sunset, tz = timeZone),
-      temp = paste0( round(myweather$main$temp - 273.15, 1), "˚"),
-      weather = myweather$weather$main[1], #sometimes more than 1 are returned
-      iconcode = myweather$weather$icon[1],
-      city = myweather$name
-      
+    return(
+      list(
+        utctime = myweather$dt,
+        tz_offset = myweather$timezone,
+        #sunrise = anytime(myweather$sys$sunrise, tz = timeZone),
+        #sunset = anytime(myweather$sys$sunset, tz = timeZone),
+        temp = paste0( round(myweather$main$temp - 273.15, 1), "˚"),
+        weather = myweather$weather$main[1], #sometimes more than 1 are returned
+        iconcode = myweather$weather$icon[1],
+        city = myweather$name,
+        city_id = myweather$id
+      )
     )
-  )
   } else {
-  return(
-    list(
-      sunrise = anytime(00:00:00),
-      sunset = anytime(00:00:00),
-      temp = "",
-      weather = "",
-      iconcode = "", #fallback icon
-      city = ""
-      
+    return(
+      list(
+        utctime = "",
+        tz_offset = "",
+        #sunrise = anytime(00:00:00),
+        #sunset = anytime(00:00:00),
+        temp = "",
+        weather = "",
+        iconcode = "", #fallback icon
+        city = "",
+        cityid = ""
+      )
     )
-  )
-    }
-  
+  }
 }
 
 get_weather_icon <- function(iconcode) {
@@ -59,25 +74,32 @@ get_weather_icon <- function(iconcode) {
   }
 }
 
-insertListItem <- function(tz) {
+insertListItem <- function(selection) {
   
-  mytime <- renderText({
-    invalidateLater(2000)
-    zoned_time <- clock::zoned_time_now(tz)
-    format.POSIXct(as_date_time(zoned_time), format = "%H:%M")
-  })
-  
-  city <- get_city(tz) %>% str_replace("\\+", "_") # replace + again to _ to use in id
-  weather <- get_weather(tz) # make reactive to invalidate?
+  # call once
+  cityid <- get_cityid(selection, data = cities) # cities is global
+  weather <- get_weather(cityid) # make reactive to invalidate?
   iconurl <- get_weather_icon(weather$iconcode)
   
+  # this is cheap call to count seconds
+  mytime <- renderText({
+    invalidateLater(2000)
+    
+    #time to show is:
+    mytime <- lubridate::now(tzone = "UTC") + weather$timezone
+    #zoned_time <- clock::zoned_time_now(tz)
+    format.POSIXct(as_date_time(mytime), format = "%H:%M")
+  })
+  
+  # and return the UI
   insertUI(
     selector = "#mylist", where = "beforeEnd",
-    ui = tags$div( id = paste0("item_", city),
+    ui = tags$div( id = paste0("item_", cityid), # use cityid as tag.. should be ok
               f7Swipeout(
-                  f7ListItem(paste0(weather$temp, " ",weather$weather),
+                  f7ListItem(paste0(weather$temp, " ",weather$weather), 
+                             #href = paste0("https://openweathermap.org/city/", weather$city_id),
                              #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
-                             right = city %>% str_replace("_", " "),  
+                             right = selection,  
                              media = apputils::icon(list(src = iconurl, width = "50px"), lib = "local"), 
                              title = tags$h3(
                                style = "font-family: Arial;", mytime)

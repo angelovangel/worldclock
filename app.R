@@ -11,7 +11,9 @@ library(shinyMobile)
 source("global.R")
 
 
-tzdbnames <- c(Sys.timezone(), clock::tzdb_names() )
+#tzdbnames <- c(Sys.timezone(), clock::tzdb_names() )
+cities <- readRDS("data/cities.rds")
+
 secret_text <- Sys.getenv("secret_text")
 
 ########################### UI ##########################
@@ -23,19 +25,20 @@ ui <- f7Page(
   f7SingleLayout(
     navbar = NULL,
     # main
-    f7SmartSelect(#virtualList = TRUE, # because of the many elements in the list
+    f7SmartSelect(virtualList = TRUE, # because of the many elements in the list
                   inputId = "selectTZ", 
                   label = "Select time zone", 
-                  choices = tzdbnames, 
+                  choices = NULL, 
                   selected = 1,
                   openIn = "popup", 
                   multiple = FALSE, 
-                  closeOnSelect = TRUE, 
+                  closeOnSelect = TRUE, searchbarPlaceholder = "search",
                   popupCloseLinkText = "Cancel"),
+    
     f7SmartSelect(#virtualList = TRUE, # because of the many elements in the list
                   inputId = "selectTZcurrent", 
                   label = "Select items to remove", 
-                  choices = tzdbnames[c(433, 322, 170)], 
+                  choices = NULL, 
                   selected = 1,
                   openIn = "popup", 
                   multiple = FALSE, 
@@ -66,6 +69,8 @@ ui <- f7Page(
 # Define server logic to show current time, update every second ----
 ########################### server ##########################
 server <- function(input, output, session) {
+  
+  updateF7SmartSelect("selectTZ", choices = cities$value)
   
   # hide the smart select, use shinyjs to emulate click on it when + is pressed
   shinyjs::hide(id = "selectTZ")
@@ -100,31 +105,31 @@ server <- function(input, output, session) {
   
   # main server
   #  track current list status
-  currList <- tzdbnames[c(433, 322, 170)] # Berlin, Tokyo, New York
+  currList <- c() # Berlin, Tokyo, New York
   
   # start with a list of 3 time zones, otherwise strange things happen with the smartselect input
-  lapply(currList, function(x) {
-    insertListItem(tz = x)
-  } )
+  # lapply(currList, function(x) {
+  #   insertListItem(tz = x)
+  # } )
   
   # insertUI when selected
   observeEvent(input$selectTZ, ignoreInit = TRUE, {
-      selection <- input$selectTZ
+      myselection <- input$selectTZ
       
-      insertListItem(selection)
-      if(selection == "Asia/Dubai") {
+      insertListItem(myselection)
+      if(myselection == "Dubai, UAE") {
           f7Toast(text = secret_text, position = "center", closeButton = F, closeTimeout = 3000, icon = f7Icon("heart"))
       }
       # finally, update selectTZcurrent list
       
-      currList <<- c(currList, selection)
+      currList <<- c(currList, myselection)
       shinyMobile::updateF7SmartSelect(inputId = "selectTZcurrent", choices = currList, selected = NULL)
       print(paste0("ins-", currList))
   })
   
   # actually remove items
   observeEvent(input$selectTZcurrent, ignoreInit = TRUE, {
-    selection <- input$selectTZcurrent
+    myselection <- input$selectTZcurrent
     city <- get_city(input$selectTZcurrent) %>% str_replace("\\+", "_")
     
     removeUI(
@@ -133,7 +138,7 @@ server <- function(input, output, session) {
     )
     # and update list
     
-    myindex <- which(str_detect(selection, currList))
+    myindex <- which(str_detect(myselection, currList))
     currList <<- currList[-myindex] # strip last
     
     print(paste0("del-", currList))
