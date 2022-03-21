@@ -3,14 +3,19 @@
 require(magrittr)
 require(anytime)
 require(ROpenWeatherMap)
+require(stringr)
+require(lubridate)
 
 
 api_key <- Sys.getenv("api_key")
 
 # get city id from smartselect input
 # input is smartselect value (Sofia, BG) and data is the cities dataframe
+# match has to be more strict, so modify input
+
 get_cityid <- function(input, data) {
-  data[data$value %in% input, ]$id
+  pattern <- paste0("^", input, "$")
+  data$id[str_detect(data$value, paste0("^", input, "$"))][1] # take first in case duplicated entries
 }
 
 # get city from time zone
@@ -86,7 +91,7 @@ insertListItem <- function(selection) {
     invalidateLater(2000)
     
     #time to show is:
-    mytime <- lubridate::now(tzone = "UTC") + weather$timezone
+    mytime <- lubridate::now(tzone = "UTC") + weather$tz_offset
     #zoned_time <- clock::zoned_time_now(tz)
     format.POSIXct(as_date_time(mytime), format = "%H:%M")
   })

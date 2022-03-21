@@ -105,19 +105,17 @@ server <- function(input, output, session) {
   
   # main server
   #  track current list status
-  currList <- c() # Berlin, Tokyo, New York
+  currList <- c("Berlin, DE", "New York, US", "Tokyo, JP") # 
   
   # start with a list of 3 time zones, otherwise strange things happen with the smartselect input
-  # lapply(currList, function(x) {
-  #   insertListItem(tz = x)
-  # } )
+  lapply(currList, insertListItem)
   
   # insertUI when selected
   observeEvent(input$selectTZ, ignoreInit = TRUE, {
       myselection <- input$selectTZ
       
       insertListItem(myselection)
-      if(myselection == "Dubai, UAE") {
+      if(myselection == "Dubai, AE") {
           f7Toast(text = secret_text, position = "center", closeButton = F, closeTimeout = 3000, icon = f7Icon("heart"))
       }
       # finally, update selectTZcurrent list
@@ -130,10 +128,10 @@ server <- function(input, output, session) {
   # actually remove items
   observeEvent(input$selectTZcurrent, ignoreInit = TRUE, {
     myselection <- input$selectTZcurrent
-    city <- get_city(input$selectTZcurrent) %>% str_replace("\\+", "_")
+    cityid <- get_cityid(input$selectTZcurrent, cities)
     
     removeUI(
-      selector = paste0("#item", "_", city), # careful here id is the city only 
+      selector = paste0("#item_", cityid), # careful here id is the city only 
       multiple = FALSE
     )
     # and update list

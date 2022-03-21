@@ -4,3 +4,5 @@
 .Ruserdata
 config
 .Renviron
+.DS_Store
+data/city.list.json.gz
