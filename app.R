@@ -18,6 +18,7 @@ secret_text <- Sys.getenv("secret_text")
 
 ########################### UI ##########################
 ui <- f7Page(
+  options = list(dark = TRUE), # can we update server-side?
   useShinyjs(),
   
   skin = "ios",
@@ -29,7 +30,7 @@ ui <- f7Page(
                   inputId = "selectTZ", 
                   label = "Select time zone", 
                   choices = NULL, 
-                  selected = 1,
+                  selected = NULL,
                   openIn = "popup", 
                   multiple = FALSE, 
                   closeOnSelect = TRUE, searchbarPlaceholder = "search",
@@ -38,21 +39,29 @@ ui <- f7Page(
     f7SmartSelect(#virtualList = TRUE, # because of the many elements in the list
                   inputId = "selectTZcurrent", 
                   label = "Select items to remove", 
-                  choices = NULL, 
-                  selected = 1,
+                  choices = c("Berlin, DE", "New York, US", "Tokyo, JP"), 
+                  selected = NULL,
                   openIn = "popup", 
                   multiple = FALSE, 
                   closeOnSelect = TRUE, 
                   popupCloseLinkText = "Cancel"),
     f7Segment(
-      f7Button("edit", "Edit", color = "black", size = "small"),
+      f7Button("edit", label = f7Icon("ellipsis"), color = "black", size = "small"),
       f7Button("done", "Done", color = "black", size = "small"), 
     container = "segment"),
     
-    f7Segment(
-      f7Button("appendItem", label = f7Icon("plus") , color = "gray", size = "small"),
-      f7Button("removeItem", label = f7Icon("minus"), color = "gray", size = "small"),
-    container = "row"),
+    tags$div(id = "settings",
+      f7Segment(
+        f7Button("appendItem", label = f7Icon("plus") , color = "gray", size = "small"),
+        f7Button("removeItem", label = f7Icon("minus"), color = "gray", size = "small"),
+      container = "row"),
+      f7Segment(
+        f7Radio("units", "Units", choices = c("Celsius", "Fahrenheit"), selected = "Celsius"), 
+        #f7Radio("theme", "Theme", choices = c("light", "dark"), selected = "dark"),
+      container = "segment"
+      )
+    ),
+    
     
     #uiOutput("addedItems"),
     f7List(id = "mylist",
@@ -77,22 +86,26 @@ server <- function(input, output, session) {
   shinyjs::hide(id = "selectTZcurrent")
   
   # show on edit only
-  shinyjs::hide(id = "appendItem")
-  shinyjs::hide(id = "removeItem")
+  shinyjs::hide("settings")
   shinyjs::hide("done")
   
   observeEvent(input$edit, {
-    shinyjs::show(id = "appendItem")
-    shinyjs::show(id = "removeItem")
+    shinyjs::show("settings")
     shinyjs::show("done")
+    shinyjs::hide("edit")
+    #shinyjs::hide("mylist")
     
   })
   
   observeEvent(input$done, {
-    shinyjs::hide(id = "appendItem")
-    shinyjs::hide(id = "removeItem")
+    #shinyjs::hide(id = "appendItem")
+    #shinyjs::hide(id = "removeItem")
+    shinyjs::hide("settings")
     shinyjs::hide("done")
+    shinyjs::show("edit")
+    #shinyjs::show("mylist")
   })
+  
   
   # emulate click, show in popup
   observeEvent(input$appendItem, ignoreInit = TRUE, {
@@ -115,7 +128,7 @@ server <- function(input, output, session) {
       myselection <- input$selectTZ
       
       insertListItem(myselection)
-      if(myselection == "Dubai, AE") {
+      if(myselection == "Abu Dhabi, AE") {
           f7Toast(text = secret_text, position = "center", closeButton = F, closeTimeout = 3000, icon = f7Icon("heart"))
       }
       # finally, update selectTZcurrent list
