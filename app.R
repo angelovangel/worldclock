@@ -19,7 +19,9 @@ secret_text <- Sys.getenv("secret_text")
 ########################### UI ##########################
 ui <- f7Page(
   options = list(dark = TRUE), # can we update server-side?
+  
   useShinyjs(),
+  tags$script(src = "getClientTimezone.js"),
   
   skin = "ios",
   title = "World Clock",
@@ -79,6 +81,15 @@ ui <- f7Page(
 ########################### server ##########################
 server <- function(input, output, session) {
   
+  # try to get client timezone
+  observeEvent(input$client_timezone, {
+    print(input$client_timezone)
+    f7Toast(HTML(paste0("Your timezone is: <br><b>", input$client_timezone, "</b>")), 
+            position = "center", 
+            closeButton = F, closeTimeout = 3000, icon = f7Icon("timer"))
+    #print(input$client_offset)
+  })
+  
   updateF7SmartSelect("selectTZ", choices = cities$value)
   
   # hide the smart select, use shinyjs to emulate click on it when + is pressed
@@ -121,13 +132,13 @@ server <- function(input, output, session) {
   currList <- c("Berlin, DE", "New York, US", "Tokyo, JP") # 
   
   # start with a list of 3 time zones, otherwise strange things happen with the smartselect input
-  lapply(currList, insertListItem)
+  lapply(currList, insertListItem, data = cities)
   
   # insertUI when selected
   observeEvent(input$selectTZ, ignoreInit = TRUE, {
       myselection <- input$selectTZ
       
-      insertListItem(myselection)
+      insertListItem(myselection, data = cities)
       if(myselection == "Abu Dhabi, AE") {
           f7Toast(text = secret_text, position = "center", closeButton = F, closeTimeout = 3000, icon = f7Icon("heart"))
       }
@@ -135,7 +146,7 @@ server <- function(input, output, session) {
       
       currList <<- c(currList, myselection)
       shinyMobile::updateF7SmartSelect(inputId = "selectTZcurrent", choices = currList, selected = NULL)
-      print(paste0("ins-", currList))
+      #print(paste0("ins-", currList))
   })
   
   # actually remove items

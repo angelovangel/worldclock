@@ -79,10 +79,10 @@ get_weather_icon <- function(iconcode) {
   }
 }
 
-insertListItem <- function(selection) {
+insertListItem <- function(selection, data) {
   
   # call once
-  cityid <- get_cityid(selection, data = cities) # cities is global
+  cityid <- get_cityid(selection, data) # 
   weather <- get_weather(cityid) # make reactive to invalidate?
   iconurl <- get_weather_icon(weather$iconcode)
   
