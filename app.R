@@ -26,11 +26,31 @@ ui <- f7Page(
   skin = "ios",
   title = "World Clock",
   f7SingleLayout(
-    navbar = NULL,
+    navbar = f7Navbar(subtitle = f7Button("settings", label = f7Icon("bars", color = "blue"), color = "black", size = "small"),
+                      #title = "Clock and Weather",
+                      leftPanel = F, 
+                      rightPanel = F
+                      #subNavbar = f7SubNavbar(
+                       # f7Button("appendItem", label = f7Icon("plus", color = "blue") , color = "black", size = "medium"),
+                        #f7Button("removeItem", label = f7Icon("minus", color = "blue"), color = "black", size = "medium"))
+                      ),
+    #panels = f7Panel(id = "mypanel", side = "right", effect = "reveal",
+                     #f7Segment(container = "segment", HTML("Add/remove cities")),
+                     #f7Segment(container = "segment", 
+                      #f7Button("appendItem", label = f7Icon("plus", color = "blue") , color = "black", size = "medium"),
+                      #f7Button("removeItem", label = f7Icon("minus", color = "blue"), color = "black", size = "medium"))
+                     #f7Button("edit", label = f7Icon("ellipsis", color = "blue"), color = "black", size = "small")
+                     #f7Radio("units", label = "Units", choices = c("Celsius", "Fahrenheit"))
+                     #),
     # main
+    f7Segment(container = "row",
+              f7Button("appendItem", label = f7Icon("plus", color = "blue") , color = "black", size = "small"),
+              f7Button("removeItem", label = f7Icon("minus", color = "blue"), color = "black", size = "small")
+              ),
+    
     f7SmartSelect(virtualList = TRUE, # because of the many elements in the list
                   inputId = "selectTZ", 
-                  label = "Select time zone", 
+                  label = "Select city to add", 
                   choices = NULL, 
                   selected = NULL,
                   openIn = "popup", 
@@ -40,29 +60,13 @@ ui <- f7Page(
     
     f7SmartSelect(#virtualList = TRUE, # because of the many elements in the list
                   inputId = "selectTZcurrent", 
-                  label = "Select items to remove", 
+                  label = "Select city to remove", 
                   choices = c("Berlin, DE", "New York, US", "Tokyo, JP"), 
                   selected = NULL,
                   openIn = "popup", 
                   multiple = FALSE, 
                   closeOnSelect = TRUE, 
                   popupCloseLinkText = "Cancel"),
-    f7Segment(
-      f7Button("edit", label = f7Icon("ellipsis"), color = "black", size = "small"),
-      f7Button("done", "Done", color = "black", size = "small"), 
-    container = "segment"),
-    
-    tags$div(id = "settings",
-      f7Segment(
-        f7Button("appendItem", label = f7Icon("plus") , color = "gray", size = "small"),
-        f7Button("removeItem", label = f7Icon("minus"), color = "gray", size = "small"),
-      container = "row"),
-      f7Segment(
-        f7Radio("units", "Units", choices = c("Celsius", "Fahrenheit"), selected = "Celsius"), 
-        #f7Radio("theme", "Theme", choices = c("light", "dark"), selected = "dark"),
-      container = "segment"
-      )
-    ),
     
     
     #uiOutput("addedItems"),
@@ -73,7 +77,7 @@ ui <- f7Page(
        #)
     ),
     
-   toolbar = f7Toolbar(position = "bottom", hairline = TRUE) 
+   toolbar = NULL 
   )
 )
   
@@ -85,37 +89,23 @@ server <- function(input, output, session) {
   observeEvent(input$client_timezone, {
     print(input$client_timezone)
     f7Toast(HTML(paste0("Your timezone is: <br><b>", input$client_timezone, "</b>")), 
-            position = "center", 
+            position = "bottom", 
             closeButton = F, closeTimeout = 3000, icon = f7Icon("timer"))
     #print(input$client_offset)
   })
   
-  updateF7SmartSelect("selectTZ", choices = cities$value)
-  
   # hide the smart select, use shinyjs to emulate click on it when + is pressed
   shinyjs::hide(id = "selectTZ")
   shinyjs::hide(id = "selectTZcurrent")
+  shinyjs::hide("appendItem")
+  shinyjs::hide("removeItem")
   
-  # show on edit only
-  shinyjs::hide("settings")
-  shinyjs::hide("done")
-  
-  observeEvent(input$edit, {
-    shinyjs::show("settings")
-    shinyjs::show("done")
-    shinyjs::hide("edit")
-    #shinyjs::hide("mylist")
-    
+  observeEvent(input$settings, {
+    shinyjs::toggle(id = "appendItem")
+    shinyjs::toggle(id = "removeItem")
   })
   
-  observeEvent(input$done, {
-    #shinyjs::hide(id = "appendItem")
-    #shinyjs::hide(id = "removeItem")
-    shinyjs::hide("settings")
-    shinyjs::hide("done")
-    shinyjs::show("edit")
-    #shinyjs::show("mylist")
-  })
+  updateF7SmartSelect("selectTZ", choices = cities$value)
   
   
   # emulate click, show in popup
@@ -125,6 +115,15 @@ server <- function(input, output, session) {
   # emulate click on current items list
   observeEvent(input$removeItem, ignoreInit = TRUE, {
       shinyjs::click(id = "selectTZcurrent")
+  })
+  
+  # close panel on add or remove
+  observeEvent(input$appendItem, {
+    updateF7Panel(id = "mypanel")
+  })
+  # close panel on add or remove
+  observeEvent(input$removeItem, {
+    updateF7Panel(id = "mypanel")
   })
   
   # main server
