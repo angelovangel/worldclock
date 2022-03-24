@@ -25,7 +25,7 @@ get_city <- function(timeZone) {
 
 # input is time zone as in tzdb or cityID (openweathermap id)
 # output is a list with data
-get_weather <- function(input) {
+get_weather <- function(input, degrees = c("C", "F")) {
   
   # if input is id
   if(is.numeric(input)) {
@@ -45,7 +45,10 @@ get_weather <- function(input) {
         tz_offset = myweather$timezone,
         #sunrise = anytime(myweather$sys$sunrise, tz = timeZone),
         #sunset = anytime(myweather$sys$sunset, tz = timeZone),
-        temp = paste0( round(myweather$main$temp - 273.15, 1), "˚"),
+        temp = ifelse(degrees=="C", 
+                      round(myweather$main$temp - 273.15, 1), 
+                      round((myweather$main$temp * 9/5) - 459.67, 1)
+                      ),
         weather = myweather$weather$main[1], #sometimes more than 1 are returned
         iconcode = myweather$weather$icon[1],
         city = myweather$name,
@@ -79,11 +82,11 @@ get_weather_icon <- function(iconcode) {
   }
 }
 
-insertListItem <- function(selection, data) {
+insertListItem <- function(selection, data, degrees) {
   
   # call once
   cityid <- get_cityid(selection, data) # 
-  weather <- get_weather(cityid) # make reactive to invalidate?
+  weather <- get_weather(cityid, degrees) # make reactive to invalidate?
   iconurl <- get_weather_icon(weather$iconcode)
   
   # this is cheap call to count seconds
@@ -96,13 +99,19 @@ insertListItem <- function(selection, data) {
     format.POSIXct(as_date_time(mytime), format = "%H:%M")
   })
   
+  # for reactive cases remove first then insert
+  removeUI(
+    selector = paste0("#item_", cityid), # careful here id is the city only 
+    multiple = FALSE
+  )
+  
   # and return the UI
   insertUI(
     selector = "#mylist", where = "beforeEnd",
     ui = tags$div( id = paste0("item_", cityid), # use cityid as tag.. should be ok
               f7Swipeout(
-                  f7ListItem(paste0(weather$temp, " ",weather$weather), 
-                             #href = paste0("https://openweathermap.org/city/", weather$city_id),
+                  f7ListItem(paste0(weather$temp,"°" ," ", weather$weather), 
+                             #href = can this trigger mypopup?
                              #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
                              right = selection,  
                              media = apputils::icon(list(src = iconurl, width = "50px"), lib = "local"), 
@@ -113,4 +122,6 @@ insertListItem <- function(selection, data) {
               )
     )
   )
+  # attempt to insert popup
+  
 }

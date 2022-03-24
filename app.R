@@ -26,7 +26,7 @@ ui <- f7Page(
   skin = "ios",
   title = "World Clock",
   f7SingleLayout(
-    navbar = f7Navbar(subtitle = f7Button("settings", label = f7Icon("bars", color = "blue"), color = "black", size = "small"),
+    navbar = f7Navbar(subtitle = f7Button("settings", label = f7Icon("bars", color = "white"), color = "black", size = "small"),
                       #title = "Clock and Weather",
                       leftPanel = F, 
                       rightPanel = F
@@ -44,9 +44,11 @@ ui <- f7Page(
                      #),
     # main
     f7Segment(container = "row",
-              f7Button("appendItem", label = f7Icon("plus", color = "blue") , color = "black", size = "small"),
-              f7Button("removeItem", label = f7Icon("minus", color = "blue"), color = "black", size = "small")
+              f7Button("appendItem", label = f7Icon("plus", color = "white") , color = "black", size = "small"),
+              f7Button("removeItem", label = f7Icon("minus", color = "white"), color = "black", size = "small")
               ),
+    
+    f7Radio("degrees", "", choices = list("°C" = "C", "°F" = "F"), selected = "C"),
     
     f7SmartSelect(virtualList = TRUE, # because of the many elements in the list
                   inputId = "selectTZ", 
@@ -76,6 +78,7 @@ ui <- f7Page(
          #tag = f7ListItem("one"), side = "right", f7SwipeoutItem(id = "del1", color = "pink", "Delete")
        #)
     ),
+    f7Popup("to be updated", id = "mypopup"),
     
    toolbar = NULL 
   )
@@ -94,15 +97,14 @@ server <- function(input, output, session) {
     #print(input$client_offset)
   })
   
-  # hide the smart select, use shinyjs to emulate click on it when + is pressed
-  shinyjs::hide(id = "selectTZ")
-  shinyjs::hide(id = "selectTZcurrent")
-  shinyjs::hide("appendItem")
-  shinyjs::hide("removeItem")
+  itemsToHide <- c("selectTZ", "selectTZcurrent", "appendItem", "removeItem", "degrees")
+  lapply(itemsToHide, shinyjs::hide)
+  
   
   observeEvent(input$settings, {
     shinyjs::toggle(id = "appendItem")
     shinyjs::toggle(id = "removeItem")
+    shinyjs::toggle(id = "degrees")
   })
   
   updateF7SmartSelect("selectTZ", choices = cities$value)
@@ -131,15 +133,19 @@ server <- function(input, output, session) {
   currList <- c("Berlin, DE", "New York, US", "Tokyo, JP") # 
   
   # start with a list of 3 time zones, otherwise strange things happen with the smartselect input
-  lapply(currList, insertListItem, data = cities)
+  observe({
+  lapply(currList, insertListItem, data = cities, degrees = input$degrees)
+  })
   
   # insertUI when selected
   observeEvent(input$selectTZ, ignoreInit = TRUE, {
       myselection <- input$selectTZ
       
-      insertListItem(myselection, data = cities)
+      insertListItem(myselection, data = cities, degrees = "C")
       if(myselection == "Abu Dhabi, AE") {
-          f7Toast(text = secret_text, position = "center", closeButton = F, closeTimeout = 3000, icon = f7Icon("heart"))
+          f7Toast(text = secret_text, position = "center", closeButton = F, closeTimeout = 3000, 
+                  icon = f7Icon("heart", color = "red")
+                  )
       }
       # finally, update selectTZcurrent list
       
