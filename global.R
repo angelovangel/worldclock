@@ -25,7 +25,7 @@ get_city <- function(timeZone) {
 
 # input is time zone as in tzdb or cityID (openweathermap id)
 # output is a list with data
-get_weather <- function(input, degrees = c("C", "F")) {
+get_weather <- function(input, degrees = c("°C", "°F")) {
   
   # if input is id
   if(is.numeric(input)) {
@@ -43,11 +43,11 @@ get_weather <- function(input, degrees = c("C", "F")) {
       list(
         utctime = myweather$dt,
         tz_offset = myweather$timezone,
-        #sunrise = anytime(myweather$sys$sunrise, tz = timeZone),
+        #sunrise = anytime(myweather$sys$sunrise + myweather$tz_offset),
         #sunset = anytime(myweather$sys$sunset, tz = timeZone),
-        temp = ifelse(degrees=="C", 
+        temp = ifelse(degrees=="°C", 
                       round(myweather$main$temp - 273.15, 1), 
-                      round((myweather$main$temp * 9/5) - 459.67, 1)
+                      round((myweather$main$temp * 9/5) - 459.67, 0) 
                       ),
         weather = myweather$weather$main[1], #sometimes more than 1 are returned
         iconcode = myweather$weather$icon[1],
@@ -99,7 +99,7 @@ insertListItem <- function(selection, data, degrees) {
     format.POSIXct(as_date_time(mytime), format = "%H:%M")
   })
   
-  # for reactive cases remove first then insert
+  # for reactive cases (to use input$degrees) remove first then insert
   removeUI(
     selector = paste0("#item_", cityid), # careful here id is the city only 
     multiple = FALSE
@@ -111,17 +111,26 @@ insertListItem <- function(selection, data, degrees) {
     ui = tags$div( id = paste0("item_", cityid), # use cityid as tag.. should be ok
               f7Swipeout(
                   f7ListItem(paste0(weather$temp,"°" ," ", weather$weather), 
-                             #href = can this trigger mypopup?
+                             href = "#", # this is used here just to add the class needed to make it look like a clickable link
                              #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
                              right = selection,  
-                             media = apputils::icon(list(src = iconurl, width = "50px"), lib = "local"), 
+                             media = apputils::icon(list(src = iconurl, width = "40px"), lib = "local"), 
                              title = tags$h3(
                                style = "font-family: Arial;", mytime)
                              )
-                 # f7SwipeoutItem(id = paste0("swipe_", city), color = "pink", "Alert")
+                  #f7SwipeoutItem(id = paste0("swipe_", cityid), color = "pink", "Alert")
               )
     )
   )
   # attempt to insert popup
-  
+  insertUI(
+    selector = "#mylist", where = "afterEnd",
+    ui = #tags$div(id = paste0("popup_", cityid),
+                  f7Popup(id = paste0("popup_", cityid),title = selection, swipeToClose = T, "bla")
+    )
+  #)
+  #open popup
+  onclick(paste0("item_", cityid), shinyMobile::updateF7Popup(id = paste0("popup_", cityid)))
 }
+
+

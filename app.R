@@ -6,6 +6,7 @@ library(ROpenWeatherMap)
 library(apputils)
 library(shinyjs)
 library(stringr)
+library(pingr)
 
 library(shinyMobile)
 source("global.R")
@@ -48,7 +49,7 @@ ui <- f7Page(
               f7Button("removeItem", label = f7Icon("minus", color = "white"), color = "black", size = "small")
               ),
     
-    f7Radio("degrees", "", choices = list("°C" = "C", "°F" = "F"), selected = "C"),
+    f7Radio("degrees", "", choices = c("°C", "°F"), selected = "°C"),
     
     f7SmartSelect(virtualList = TRUE, # because of the many elements in the list
                   inputId = "selectTZ", 
@@ -78,7 +79,8 @@ ui <- f7Page(
          #tag = f7ListItem("one"), side = "right", f7SwipeoutItem(id = "del1", color = "pink", "Delete")
        #)
     ),
-    f7Popup("to be updated", id = "mypopup"),
+    
+    #f7Popup(id = "mypopup", "to be updated"),
     
    toolbar = NULL 
   )
@@ -107,6 +109,9 @@ server <- function(input, output, session) {
     shinyjs::toggle(id = "degrees")
   })
   
+  # well try to trigger popup, have to add custom shiny input bindings?
+  
+  
   updateF7SmartSelect("selectTZ", choices = cities$value)
   
   
@@ -119,29 +124,24 @@ server <- function(input, output, session) {
       shinyjs::click(id = "selectTZcurrent")
   })
   
-  # close panel on add or remove
-  observeEvent(input$appendItem, {
-    updateF7Panel(id = "mypanel")
-  })
-  # close panel on add or remove
-  observeEvent(input$removeItem, {
-    updateF7Panel(id = "mypanel")
-  })
-  
   # main server
   #  track current list status
   currList <- c("Berlin, DE", "New York, US", "Tokyo, JP") # 
   
   # start with a list of 3 time zones, otherwise strange things happen with the smartselect input
   observe({
-  lapply(currList, insertListItem, data = cities, degrees = input$degrees)
+    # validate(
+    #   need(!is.na(pingr::ping("google.com", count = 1)), "No internet connection!")
+    # )
+    lapply(currList, insertListItem, data = cities, degrees = input$degrees)
   })
   
   # insertUI when selected
   observeEvent(input$selectTZ, ignoreInit = TRUE, {
       myselection <- input$selectTZ
       
-      insertListItem(myselection, data = cities, degrees = "C")
+      insertListItem(myselection, data = cities, degrees = input$degrees)
+      
       if(myselection == "Abu Dhabi, AE") {
           f7Toast(text = secret_text, position = "center", closeButton = F, closeTimeout = 3000, 
                   icon = f7Icon("heart", color = "red")
@@ -174,9 +174,6 @@ server <- function(input, output, session) {
     
   })
   
-  observeEvent(input$swipe_Tokyo, {
-    alert("bla")
-  })
   
 }
 
