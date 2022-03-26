@@ -6,7 +6,6 @@ library(ROpenWeatherMap)
 library(apputils)
 library(shinyjs)
 library(stringr)
-library(pingr)
 library(shinyMobile)
 
 source("R/global.R")

@@ -1,10 +1,11 @@
 # global for the worldclock app
 
-require(magrittr)
-require(anytime)
-require(ROpenWeatherMap)
-require(stringr)
-require(lubridate)
+library(magrittr)
+library(anytime)
+library(ROpenWeatherMap)
+library(stringr)
+library(lubridate)
+library(sparkline)
 
 
 api_key <- Sys.getenv("api_key")
@@ -89,12 +90,21 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
   cityid <- get_cityid(selection, data) # 
   weather <- get_weather(cityid) # make reactive to invalidate?
   iconurl <- get_weather_icon(weather$iconcode)
-  temperature <- ifelse(degrees=="°C", 
+  temperature <- ifelse(degrees == "°C", 
                  round(weather$temp - 273.15, 1), 
-                 round((weather$temp * 9/5) - 459.67, 0) 
-                                )
+                 round((weather$temp * 9/5) - 459.67, 0)
+                 )
                  
-  forecast <- get_forecast(cityid, api_key)
+  forecast <- get_forecast(cityid, api_key, timestamps = 9)
+  if(degrees == "°C") { 
+      forecast$temp <- round(forecast$temp - 273.15, 1) 
+      forecast$mintemp <- round(forecast$mintemp - 273.15, 1) 
+      forecast$maxtemp <- round(forecast$maxtemp - 273.15, 1) 
+    } else { 
+      forecast$temp <- round((forecast$temp * 9/5) - 459.67, 0)
+      forecast$mintemp <- round((forecast$mintemp * 9/5) - 459.67, 0)
+      forecast$maxtemp <- round((forecast$maxtemp * 9/5) - 459.67, 0)
+    }
   
   # this is cheap call to count seconds
   mytime <- renderText({
@@ -127,14 +137,22 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
                              )
                   #f7SwipeoutItem(id = paste0("swipe_", cityid), color = "pink", "Alert")
               ),
-               f7Popup(id = paste0("popup_", cityid),title = selection, swipeToClose = T, fullsize = T,
+               f7Popup(id = paste0("popup_", cityid),
+                       title = paste0(selection, " 24h weather"), swipeToClose = T, fullsize = T,
                        f7List(
-                         lapply(1:8, function(j){ # these are the foreast points
+                         lapply(1:9, function(j){ # these are the foreast points
                            iconpath <- get_weather_icon( forecast$icon[j] )
                            
                            f7ListItem(
-                             paste0(forecast$temp[j], "° ", forecast$main[j]),
-                             title = tags$h4( forecast$time[j] ),
+                             format.POSIXct(anytime(forecast$time[j], asUTC = T), format = "%a %H:%M"),
+                             sparkline(forecast$temp, # order: target, performance, range1, range2, range3, ...
+                                        type = "bar", 
+                                        #barColor = "LightGray", 
+                                        #negBarColor = "LightGrey", 
+                                        colorMap = c( rep("LightGrey", j-1), "Orange", rep("LightGrey", 9-j) )# highlight current bar
+                                        ),
+                                        
+                             title = tags$h4( forecast$temp[j], "° ", forecast$main[j] ),
                              media = apputils::icon(list(src = iconpath, width = "40px"), lib = "local"),
                              )
                          }) 

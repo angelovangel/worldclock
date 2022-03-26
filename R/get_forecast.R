@@ -10,10 +10,13 @@ get_forecast <- function(id, apikey, timestamps = 8) {
   res <- httr::GET(call)
   data <- jsonlite::fromJSON(rawToChar(res$content))
   
+  
   return(
     list(
       time = data$list$dt_txt,
       temp = data$list$main$temp,
+      mintemp = min(data$list$main$temp, na.rm = T),
+      maxtemp = max(data$list$main$temp, na.rm = T),
       main = bind_rows(data$list$weather)[["main"]],
       description = bind_rows(data$list$weather)[["description"]],
       icon = bind_rows(data$list$weather)[["icon"]]
