@@ -25,7 +25,7 @@ get_city <- function(timeZone) {
 
 # input is time zone as in tzdb or cityID (openweathermap id)
 # output is a list with data
-get_weather <- function(input, degrees = c("°C", "°F")) {
+get_weather <- function(input) {
   
   # if input is id
   if(is.numeric(input)) {
@@ -45,10 +45,11 @@ get_weather <- function(input, degrees = c("°C", "°F")) {
         tz_offset = myweather$timezone,
         #sunrise = anytime(myweather$sys$sunrise + myweather$tz_offset),
         #sunset = anytime(myweather$sys$sunset, tz = timeZone),
-        temp = ifelse(degrees=="°C", 
-                      round(myweather$main$temp - 273.15, 1), 
-                      round((myweather$main$temp * 9/5) - 459.67, 0) 
-                      ),
+        # temp = ifelse(degrees=="°C", 
+        #               round(myweather$main$temp - 273.15, 1), 
+        #               round((myweather$main$temp * 9/5) - 459.67, 0) 
+        #               ),
+        temp = myweather$main$temp, # K here
         weather = myweather$weather$main[1], #sometimes more than 1 are returned
         iconcode = myweather$weather$icon[1],
         city = myweather$name,
@@ -82,12 +83,18 @@ get_weather_icon <- function(iconcode) {
   }
 }
 
-insertListItem <- function(selection, data, degrees) {
+insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
   
   # call once
   cityid <- get_cityid(selection, data) # 
-  weather <- get_weather(cityid, degrees) # make reactive to invalidate?
+  weather <- get_weather(cityid) # make reactive to invalidate?
   iconurl <- get_weather_icon(weather$iconcode)
+  temperature <- ifelse(degrees=="°C", 
+                 round(weather$temp - 273.15, 1), 
+                 round((weather$temp * 9/5) - 459.67, 0) 
+                                )
+                 
+  forecast <- get_forecast(cityid, api_key)
   
   # this is cheap call to count seconds
   mytime <- renderText({
@@ -110,7 +117,7 @@ insertListItem <- function(selection, data, degrees) {
     selector = "#mylist", where = "beforeEnd",
     ui = tags$div( id = paste0("item_", cityid), # use cityid as tag.. should be ok
               f7Swipeout(
-                  f7ListItem(paste0(weather$temp,"°" ," ", weather$weather), 
+                  f7ListItem(paste0(temperature,"°" ," ", weather$weather), 
                              href = "#", # this is used here just to add the class needed to make it look like a clickable link
                              #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
                              right = selection,  
@@ -119,16 +126,24 @@ insertListItem <- function(selection, data, degrees) {
                                style = "font-family: Arial;", mytime)
                              )
                   #f7SwipeoutItem(id = paste0("swipe_", cityid), color = "pink", "Alert")
-              )
+              ),
+               f7Popup(id = paste0("popup_", cityid),title = selection, swipeToClose = T, fullsize = T,
+                       f7List(
+                         lapply(1:8, function(j){ # these are the foreast points
+                           iconpath <- get_weather_icon( forecast$icon[j] )
+                           
+                           f7ListItem(
+                             paste0(forecast$temp[j], "° ", forecast$main[j]),
+                             title = tags$h4( forecast$time[j] ),
+                             media = apputils::icon(list(src = iconpath, width = "40px"), lib = "local"),
+                             )
+                         }) 
+                       )
+               )
+             
     )
   )
-  # attempt to insert popup
-  insertUI(
-    selector = "#mylist", where = "afterEnd",
-    ui = #tags$div(id = paste0("popup_", cityid),
-                  f7Popup(id = paste0("popup_", cityid),title = selection, swipeToClose = T, "bla")
-    )
-  #)
+  
   #open popup
   onclick(paste0("item_", cityid), shinyMobile::updateF7Popup(id = paste0("popup_", cityid)))
 }

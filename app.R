@@ -7,9 +7,10 @@ library(apputils)
 library(shinyjs)
 library(stringr)
 library(pingr)
-
 library(shinyMobile)
-source("global.R")
+
+source("R/global.R")
+source("R/get_forecast.R")
 
 
 #tzdbnames <- c(Sys.timezone(), clock::tzdb_names() )
@@ -22,6 +23,7 @@ ui <- f7Page(
   options = list(dark = TRUE), # can we update server-side?
   
   useShinyjs(),
+  
   tags$script(src = "getClientTimezone.js"),
   
   skin = "ios",
@@ -73,7 +75,7 @@ ui <- f7Page(
     
     
     #uiOutput("addedItems"),
-    f7List(id = "mylist",
+    f7List(id = "mylist"
            
        #f7Swipeout(id = "myswipeout",
          #tag = f7ListItem("one"), side = "right", f7SwipeoutItem(id = "del1", color = "pink", "Delete")
