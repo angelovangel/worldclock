@@ -15,7 +15,7 @@ source("R/get_forecast.R")
 options(shiny.host = "0.0.0.0", shiny.port = 8888)
 
 #tzdbnames <- c(Sys.timezone(), clock::tzdb_names() )
-cities <- readRDS("data/cities.rds")
+cities <- readRDS("data/cities500k.rds")
 
 secret_text <- Sys.getenv("secret_text")
 
@@ -102,12 +102,14 @@ server <- function(input, output, session) {
     shinyjs::toggle(id = "degrees")
   })
   
+  #updateSelectizeInput("selectTZ", choices = cities$value, session = session, server = T)
   updateF7SmartSelect("selectTZ", choices = cities$value)
   
   
   # emulate click, show in popup
   observeEvent(input$appendItem, ignoreInit = TRUE, {
       shinyjs::click(id = "selectTZ")
+      #shinyjs::show("selectTZ")
   })
   # emulate click on current items list
   observeEvent(input$removeItem, ignoreInit = TRUE, {
