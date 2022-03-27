@@ -7,6 +7,7 @@ library(apputils)
 library(shinyjs)
 library(stringr)
 library(shinyMobile)
+library(shiny.pwa)
 
 source("R/global.R")
 source("R/get_forecast.R")
@@ -24,6 +25,7 @@ ui <- f7Page(
   options = list(dark = TRUE), # can we update server-side?
   
   useShinyjs(),
+  pwa(domain = "http://165.22.73.243/worldclock/", output = "www"),
   
   tags$script(src = "getClientTimezone.js"),
   
