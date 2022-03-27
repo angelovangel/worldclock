@@ -25,7 +25,7 @@ ui <- f7Page(
   options = list(dark = TRUE), # can we update server-side?
   
   useShinyjs(),
-  pwa(domain = "http://165.22.73.243/worldclock/", output = "www"),
+  pwa(domain = "http://165.22.73.243/worldclock/", output = "www", icon = "www/icons8-sun-500.png"),
   
   tags$script(src = "getClientTimezone.js"),
   
