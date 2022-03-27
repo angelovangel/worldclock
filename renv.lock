@@ -870,6 +870,17 @@
         "lattice"
       ]
     },
+    "sparkline": {
+      "Package": "sparkline",
+      "Version": "2.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "06e5e4017ecb00fd142bada4b380c59a",
+      "Requirements": [
+        "htmltools",
+        "htmlwidgets"
+      ]
+    },
     "stringi": {
       "Package": "stringi",
       "Version": "1.7.6",

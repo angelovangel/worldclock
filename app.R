@@ -11,6 +11,8 @@ library(shinyMobile)
 source("R/global.R")
 source("R/get_forecast.R")
 
+# to acces on the lan
+options(shiny.host = "0.0.0.0", shiny.port = 8888)
 
 #tzdbnames <- c(Sys.timezone(), clock::tzdb_names() )
 cities <- readRDS("data/cities.rds")
@@ -32,18 +34,8 @@ ui <- f7Page(
                       #title = "Clock and Weather",
                       leftPanel = F, 
                       rightPanel = F
-                      #subNavbar = f7SubNavbar(
-                       # f7Button("appendItem", label = f7Icon("plus", color = "blue") , color = "black", size = "medium"),
-                        #f7Button("removeItem", label = f7Icon("minus", color = "blue"), color = "black", size = "medium"))
                       ),
-    #panels = f7Panel(id = "mypanel", side = "right", effect = "reveal",
-                     #f7Segment(container = "segment", HTML("Add/remove cities")),
-                     #f7Segment(container = "segment", 
-                      #f7Button("appendItem", label = f7Icon("plus", color = "blue") , color = "black", size = "medium"),
-                      #f7Button("removeItem", label = f7Icon("minus", color = "blue"), color = "black", size = "medium"))
-                     #f7Button("edit", label = f7Icon("ellipsis", color = "blue"), color = "black", size = "small")
-                     #f7Radio("units", label = "Units", choices = c("Celsius", "Fahrenheit"))
-                     #),
+    
     # main
     f7Segment(container = "row",
               f7Button("appendItem", label = f7Icon("plus", color = "white") , color = "black", size = "small"),
@@ -109,9 +101,6 @@ server <- function(input, output, session) {
     shinyjs::toggle(id = "removeItem")
     shinyjs::toggle(id = "degrees")
   })
-  
-  # well try to trigger popup, have to add custom shiny input bindings?
-  
   
   updateF7SmartSelect("selectTZ", choices = cities$value)
   

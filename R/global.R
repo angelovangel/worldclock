@@ -95,7 +95,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
                  round((weather$temp * 9/5) - 459.67, 0)
                  )
                  
-  forecast <- get_forecast(cityid, api_key, timestamps = 9)
+  forecast <- get_forecast(cityid, api_key, timestamps = 18)
   if(degrees == "°C") { 
       forecast$temp <- round(forecast$temp - 273.15, 1) 
       forecast$mintemp <- round(forecast$mintemp - 273.15, 1) 
@@ -127,7 +127,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
     selector = "#mylist", where = "beforeEnd",
     ui = tags$div( id = paste0("item_", cityid), # use cityid as tag.. should be ok
               f7Swipeout(
-                  f7ListItem(paste0(temperature,"°" ," ", weather$weather), 
+                  f7ListItem(paste0(weather$weather, " ", temperature,"°"), 
                              href = "#", # this is used here just to add the class needed to make it look like a clickable link
                              #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
                              right = selection,  
@@ -138,21 +138,22 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
                   #f7SwipeoutItem(id = paste0("swipe_", cityid), color = "pink", "Alert")
               ),
                f7Popup(id = paste0("popup_", cityid),
-                       title = paste0(selection, " 24h weather"), swipeToClose = T, fullsize = T,
+                       title = paste0(selection, " 48h forecast"), swipeToClose = F, fullsize = T,
                        f7List(
-                         lapply(1:9, function(j){ # these are the foreast points
+                         lapply(1:18, function(j){ # these are the foreast points
                            iconpath <- get_weather_icon( forecast$icon[j] )
                            
                            f7ListItem(
-                             format.POSIXct(anytime(forecast$time[j], asUTC = T), format = "%a %H:%M"),
+                             paste0( forecast$main[j], " ", forecast$temp[j], "°" ),
+                             #format.POSIXct(anytime(forecast$time[j], asUTC = T), format = "%a %H:%M"),
                              sparkline(forecast$temp, # order: target, performance, range1, range2, range3, ...
                                         type = "bar", 
                                         #barColor = "LightGray", 
                                         #negBarColor = "LightGrey", 
-                                        colorMap = c( rep("LightGrey", j-1), "Orange", rep("LightGrey", 9-j) )# highlight current bar
+                                        colorMap = c( rep("LightGrey", j-1), "OrangeRed", rep("LightGrey", 18-j) )# highlight current bar
                                         ),
                                         
-                             title = tags$h4( forecast$temp[j], "° ", forecast$main[j] ),
+                             title = format.POSIXct(anytime(forecast$time[j], asUTC = T), format = "%a %H:%M"),
                              media = apputils::icon(list(src = iconpath, width = "40px"), lib = "local"),
                              )
                          }) 
