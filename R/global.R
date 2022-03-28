@@ -95,7 +95,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
                  round((weather$temp * 9/5) - 459.67, 0)
                  )
                  
-  forecast <- get_forecast(cityid, api_key, timestamps = 18)
+  forecast <- get_forecast(cityid, timestamps = 18)
   if(degrees == "°C") { 
       forecast$temp <- round(forecast$temp - 273.15, 1) 
       forecast$mintemp <- round(forecast$mintemp - 273.15, 1) 
