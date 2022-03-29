@@ -1,8 +1,6 @@
 library(shiny)
 library(clock)
 library(dplyr)
-#library(shinydashboard)
-library(ROpenWeatherMap)
 library(apputils)
 library(shinyjs)
 library(stringr)
@@ -32,10 +30,12 @@ ui <- f7Page(
   skin = "ios",
   title = "World Clock",
   f7SingleLayout(
-    navbar = f7Navbar(subtitle = f7Button("settings", label = f7Icon("bars", color = "white"), color = "black", size = "medium"),
+    navbar = f7Navbar(subtitle = f7Button("settings", 
+                                          label = f7Icon("bars", color = "white"), 
+                                          color = "black", size = "medium"),
                       #title = "Clock and Weather",
                       leftPanel = F, 
-                      rightPanel = F
+                      rightPanel = T
                       ),
     
     # main

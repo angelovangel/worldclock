@@ -26,53 +26,53 @@ get_city <- function(timeZone) {
 
 # input is time zone as in tzdb or cityID (openweathermap id)
 # output is a list with data
-get_weather <- function(input) {
-  
-  # if input is id
-  if(is.numeric(input)) {
-    myweather <- ROpenWeatherMap::get_current_weather(api_key, cityID = input)
-  } else {
-    #get city name
-    mycity <- strsplit(input, "/") %>% unlist() %>% tail(1) %>% gsub("_", "+", .) # get_current_weather uses + instead of _
-    myweather <- ROpenWeatherMap::get_current_weather(api_key, city = mycity)
-  }
-    
-  # return only if data fetched OK
-  if(myweather$cod == 200) {
-    
-    return(
-      list(
-        utctime = myweather$dt,
-        tz_offset = myweather$timezone,
-        #sunrise = anytime(myweather$sys$sunrise + myweather$tz_offset),
-        #sunset = anytime(myweather$sys$sunset, tz = timeZone),
-        # temp = ifelse(degrees=="°C", 
-        #               round(myweather$main$temp - 273.15, 1), 
-        #               round((myweather$main$temp * 9/5) - 459.67, 0) 
-        #               ),
-        temp = myweather$main$temp, # K here
-        weather = myweather$weather$main[1], #sometimes more than 1 are returned
-        iconcode = myweather$weather$icon[1],
-        city = myweather$name,
-        city_id = myweather$id
-      )
-    )
-  } else {
-    return(
-      list(
-        utctime = "",
-        tz_offset = "",
-        #sunrise = anytime(00:00:00),
-        #sunset = anytime(00:00:00),
-        temp = "",
-        weather = "",
-        iconcode = "", #fallback icon
-        city = "",
-        cityid = ""
-      )
-    )
-  }
-}
+# get_weather <- function(input) {
+#   
+#   # if input is id
+#   if(is.numeric(input)) {
+#     myweather <- ROpenWeatherMap::get_current_weather(api_key, cityID = input)
+#   } else {
+#     #get city name
+#     mycity <- strsplit(input, "/") %>% unlist() %>% tail(1) %>% gsub("_", "+", .) # get_current_weather uses + instead of _
+#     myweather <- ROpenWeatherMap::get_current_weather(api_key, city = mycity)
+#   }
+#     
+#   # return only if data fetched OK
+#   if(myweather$cod == 200) {
+#     
+#     return(
+#       list(
+#         utctime = myweather$dt,
+#         tz_offset = myweather$timezone,
+#         #sunrise = anytime(myweather$sys$sunrise + myweather$tz_offset),
+#         #sunset = anytime(myweather$sys$sunset, tz = timeZone),
+#         # temp = ifelse(degrees=="°C", 
+#         #               round(myweather$main$temp - 273.15, 1), 
+#         #               round((myweather$main$temp * 9/5) - 459.67, 0) 
+#         #               ),
+#         temp = myweather$main$temp, # K here
+#         weather = myweather$weather$main[1], #sometimes more than 1 are returned
+#         iconcode = myweather$weather$icon[1],
+#         city = myweather$name,
+#         city_id = myweather$id
+#       )
+#     )
+#   } else {
+#     return(
+#       list(
+#         utctime = "",
+#         tz_offset = "",
+#         #sunrise = anytime(00:00:00),
+#         #sunset = anytime(00:00:00),
+#         temp = "",
+#         weather = "",
+#         iconcode = "", #fallback icon
+#         city = "",
+#         cityid = ""
+#       )
+#     )
+#   }
+# }
 
 get_weather_icon <- function(iconcode) {
   # fallback in case nothing was fetched by get_weather
@@ -87,23 +87,31 @@ get_weather_icon <- function(iconcode) {
 insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
   
   # call once
-  cityid <- get_cityid(selection, data) # 
-  weather <- get_weather(cityid) # make reactive to invalidate?
-  iconurl <- get_weather_icon(weather$iconcode)
+  # selection is "Berlin, DE", from there we get the lat lon and make one API call
+
+  pattern <- paste0("^", selection, "$")
+  hit <- data[str_detect(data$value, pattern), ][1, ] # in case more than one
+  lat <- hit$lat
+  lon <- hit$lon
+  cityid <- hit$id
+  
+  weather <- get_forecast_onecall(lat, lon, apikey = api_key) # make reactive to invalidate?
+  iconurl <- get_weather_icon(weather$icon)
+  
   temperature <- ifelse(degrees == "°C", 
                  round(weather$temp - 273.15, 1), 
                  round((weather$temp * 9/5) - 459.67, 0)
                  )
                  
-  forecast <- get_forecast(cityid, timestamps = 18)
+  #forecast <- get_forecast(cityid, timestamps = 18)
   if(degrees == "°C") { 
-      forecast$temp <- round(forecast$temp - 273.15, 1) 
-      forecast$mintemp <- round(forecast$mintemp - 273.15, 1) 
-      forecast$maxtemp <- round(forecast$maxtemp - 273.15, 1) 
+      weather$daily_tempday <- round(weather$daily_tempday - 273.15, 1) 
+      weather$daily_tempmin <- round(weather$daily_tempmin - 273.15, 1) 
+      weather$daily_tempmax <- round(weather$daily_tempmax - 273.15, 1) 
     } else { 
-      forecast$temp <- round((forecast$temp * 9/5) - 459.67, 0)
-      forecast$mintemp <- round((forecast$mintemp * 9/5) - 459.67, 0)
-      forecast$maxtemp <- round((forecast$maxtemp * 9/5) - 459.67, 0)
+      weather$daily_tempday <- round((weather$daily_tempday * 9/5) - 459.67, 0)
+      weather$daily_tempmin <- round((weather$daily_tempmin * 9/5) - 459.67, 0)
+      weather$daily_tempmax <- round((weather$daily_tempmax * 9/5) - 459.67, 0)
     }
   
   # this is cheap call to count seconds
@@ -127,33 +135,39 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
     selector = "#mylist", where = "beforeEnd",
     ui = tags$div( id = paste0("item_", cityid), # use cityid as tag.. should be ok
               f7Swipeout(
-                  f7ListItem(paste0(weather$weather, " ", temperature,"°"), 
+                  f7ListItem(paste0(temperature,"°"), 
                              href = "#", # this is used here just to add the class needed to make it look like a clickable link
                              #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
-                             right = selection,  
+                             #right = selection,  
                              media = apputils::icon(list(src = iconurl, width = "40px"), lib = "local"), 
-                             title = tags$h3(
-                               style = "font-family: Arial;", mytime)
+                             title = tags$b( style = "font-family: Arial;", mytime), 
+                             header = selection, 
+                             footer = weather$main
                              )
                   #f7SwipeoutItem(id = paste0("swipe_", cityid), color = "pink", "Alert")
               ),
                f7Popup(id = paste0("popup_", cityid),
-                       title = paste0(selection, " 48h forecast"), swipeToClose = F, fullsize = T,
+                       title = paste0(selection, " 7 days forecast"), swipeToClose = T, fullsize = T,
                        f7List(
-                         lapply(1:18, function(j){ # these are the foreast points
-                           iconpath <- get_weather_icon( forecast$icon[j] )
+                         lapply(seq(weather$daily_main), function(j){ # these are the forecast points
+                           iconpath <- get_weather_icon( weather$daily_icon[j] )
                            
                            f7ListItem(
-                             paste0( forecast$main[j], " ", forecast$temp[j], "°" ),
+                             paste0( weather$daily_tempday[j], "°  " ),
                              #format.POSIXct(anytime(forecast$time[j], asUTC = T), format = "%a %H:%M"),
-                             sparkline(forecast$temp, # order: target, performance, range1, range2, range3, ...
+                             sparkline(weather$daily_tempday, # order: target, performance, range1, range2, range3, ...
                                         type = "bar", 
                                         #barColor = "LightGray", 
                                         #negBarColor = "LightGrey", 
-                                        colorMap = c( rep("LightGrey", j-1), "OrangeRed", rep("LightGrey", 18-j) )# highlight current bar
+                                        colorMap = c( rep("LightGrey", j-1), "OrangeRed", rep("LightGrey", 8-j) )# highlight current bar
                                         ),
-                                        
-                             title = format.POSIXct(anytime(forecast$time[j], asUTC = T), format = "%a %H:%M"),
+                             title = tags$b(style = "font-family: Arial;",
+                                            format.POSIXct(anytime(weather$daily_time[j] + weather$tz_offset, asUTC = T), 
+                                                           format = "%a")
+                                            ),
+                             header = format.POSIXct(anytime(weather$daily_time[j] + weather$tz_offset, asUTC = T), 
+                                                     format = "%e %b"),
+                             footer = weather$daily_main[j],
                              media = apputils::icon(list(src = iconpath, width = "40px"), lib = "local"),
                              )
                          }) 

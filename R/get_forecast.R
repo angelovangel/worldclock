@@ -37,6 +37,7 @@ get_forecast_onecall <- function(lat, lon, exclude = "minutely,hourly", apikey) 
   call <- paste0("https://api.openweathermap.org/data/2.5/onecall?lat=", lat, "&lon=", lon, "&exclude=", exclude, "&appid=", api_key)
   res <- httr::GET(call)
   data <- jsonlite::fromJSON(rawToChar(res$content))
+  
   return(
     list(
       time = data$current$dt,
@@ -48,6 +49,7 @@ get_forecast_onecall <- function(lat, lon, exclude = "minutely,hourly", apikey) 
       main = data$current$weather$main,
       description = data$current$weather$description,
       icon = data$current$weather$icon,
+      daily_time = data$daily$dt,
       daily_sunrise = data$daily$sunrise,
       daily_sunset = data$daily$sunset,
       daily_tempmin = data$daily$temp$min,
