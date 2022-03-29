@@ -30,21 +30,23 @@ ui <- f7Page(
   skin = "ios",
   title = "World Clock",
   f7SingleLayout(
-    navbar = f7Navbar(subtitle = f7Button("settings", 
-                                          label = f7Icon("bars", color = "white"), 
-                                          color = "black", size = "medium"),
+    navbar = f7Navbar(subtitle = "Clock and weather",
                       #title = "Clock and Weather",
                       leftPanel = F, 
                       rightPanel = T
-                      ),
+                      ), 
+    panels = f7Panel(
+      f7Segment(container = "row",
+                f7Button("appendItem", label = f7Icon("plus", color = "white") , color = "black", size = "large"),
+                f7Button("removeItem", label = f7Icon("minus", color = "white"), color = "black", size = "large")
+      ), 
+      f7Radio("degrees", "", choices = c("°C", "°F"), selected = "°C"),
+      side = "right", id = "mypanel", effect = "reveal"),
     
     # main
-    f7Segment(container = "row",
-              f7Button("appendItem", label = f7Icon("plus", color = "white") , color = "black", size = "small"),
-              f7Button("removeItem", label = f7Icon("minus", color = "white"), color = "black", size = "small")
-              ),
     
-    f7Radio("degrees", "", choices = c("°C", "°F"), selected = "°C"),
+    
+    
     
     f7SmartSelect(virtualList = TRUE, # because of the many elements in the list
                   inputId = "selectTZ", 
@@ -94,15 +96,9 @@ server <- function(input, output, session) {
     #print(input$client_offset)
   })
   
-  itemsToHide <- c("selectTZ", "selectTZcurrent", "appendItem", "removeItem", "degrees")
+  itemsToHide <- c("selectTZ", "selectTZcurrent")
   lapply(itemsToHide, shinyjs::hide)
   
-  
-  observeEvent(input$settings, {
-    shinyjs::toggle(id = "appendItem")
-    shinyjs::toggle(id = "removeItem")
-    shinyjs::toggle(id = "degrees")
-  })
   
   #updateSelectizeInput("selectTZ", choices = cities$value, session = session, server = T)
   updateF7SmartSelect("selectTZ", choices = cities$value)
@@ -116,6 +112,11 @@ server <- function(input, output, session) {
   # emulate click on current items list
   observeEvent(input$removeItem, ignoreInit = TRUE, {
       shinyjs::click(id = "selectTZcurrent")
+  })
+  
+  # observer to close panel on degree select
+  observeEvent(input$degrees, ignoreInit = TRUE, {
+    updateF7Panel(id = "mypanel")
   })
   
   # main server
@@ -146,6 +147,9 @@ server <- function(input, output, session) {
       currList <<- c(currList, myselection)
       shinyMobile::updateF7SmartSelect(inputId = "selectTZcurrent", choices = currList, selected = NULL)
       #print(paste0("ins-", currList))
+      
+      # and toggle panel
+      updateF7Panel(id = "mypanel")
   })
   
   # actually remove items
@@ -165,6 +169,8 @@ server <- function(input, output, session) {
     print(paste0("del-", currList))
     
     shinyMobile::updateF7SmartSelect(inputId = "selectTZcurrent", choices = currList, selected = NULL)
+    # and toggle panel
+    updateF7Panel(id = "mypanel")
     
   })
   
