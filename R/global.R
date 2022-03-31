@@ -2,10 +2,10 @@
 
 library(magrittr)
 library(anytime)
-library(ROpenWeatherMap)
 library(stringr)
 library(lubridate)
 library(sparkline)
+library(htmltools)
 
 
 api_key <- Sys.getenv("api_key")
@@ -24,55 +24,6 @@ get_city <- function(timeZone) {
   strsplit(timeZone, "/") %>% unlist() %>% tail(1) %>% gsub("_", "+", .)
 }
 
-# input is time zone as in tzdb or cityID (openweathermap id)
-# output is a list with data
-# get_weather <- function(input) {
-#   
-#   # if input is id
-#   if(is.numeric(input)) {
-#     myweather <- ROpenWeatherMap::get_current_weather(api_key, cityID = input)
-#   } else {
-#     #get city name
-#     mycity <- strsplit(input, "/") %>% unlist() %>% tail(1) %>% gsub("_", "+", .) # get_current_weather uses + instead of _
-#     myweather <- ROpenWeatherMap::get_current_weather(api_key, city = mycity)
-#   }
-#     
-#   # return only if data fetched OK
-#   if(myweather$cod == 200) {
-#     
-#     return(
-#       list(
-#         utctime = myweather$dt,
-#         tz_offset = myweather$timezone,
-#         #sunrise = anytime(myweather$sys$sunrise + myweather$tz_offset),
-#         #sunset = anytime(myweather$sys$sunset, tz = timeZone),
-#         # temp = ifelse(degrees=="°C", 
-#         #               round(myweather$main$temp - 273.15, 1), 
-#         #               round((myweather$main$temp * 9/5) - 459.67, 0) 
-#         #               ),
-#         temp = myweather$main$temp, # K here
-#         weather = myweather$weather$main[1], #sometimes more than 1 are returned
-#         iconcode = myweather$weather$icon[1],
-#         city = myweather$name,
-#         city_id = myweather$id
-#       )
-#     )
-#   } else {
-#     return(
-#       list(
-#         utctime = "",
-#         tz_offset = "",
-#         #sunrise = anytime(00:00:00),
-#         #sunset = anytime(00:00:00),
-#         temp = "",
-#         weather = "",
-#         iconcode = "", #fallback icon
-#         city = "",
-#         cityid = ""
-#       )
-#     )
-#   }
-# }
 
 get_weather_icon <- function(iconcode) {
   # fallback in case nothing was fetched by get_weather
@@ -98,20 +49,22 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
   weather <- get_forecast_onecall(lat, lon, apikey = api_key) # make reactive to invalidate?
   iconurl <- get_weather_icon(weather$icon)
   
-  temperature <- ifelse(degrees == "°C", 
-                 round(weather$temp - 273.15, 1), 
-                 round((weather$temp * 9/5) - 459.67, 0)
-                 )
                  
   #forecast <- get_forecast(cityid, timestamps = 18)
   if(degrees == "°C") { 
+      temperature <- formatC(weather$temp - 273.15, 1, format = "f", digits = 1)
       weather$daily_tempday <- round(weather$daily_tempday - 273.15, 1) 
       weather$daily_tempmin <- round(weather$daily_tempmin - 273.15, 1) 
       weather$daily_tempmax <- round(weather$daily_tempmax - 273.15, 1) 
+      weather$forecast_tempmin <- round(weather$forecast_tempmin - 273.15, 1)
+      weather$forecast_tempmax <- round(weather$forecast_tempmax - 273.15, 1)
     } else { 
+      temperature <- round((weather$temp * 9/5) - 459.67, 0)
       weather$daily_tempday <- round((weather$daily_tempday * 9/5) - 459.67, 0)
       weather$daily_tempmin <- round((weather$daily_tempmin * 9/5) - 459.67, 0)
       weather$daily_tempmax <- round((weather$daily_tempmax * 9/5) - 459.67, 0)
+      weather$forecast_tempmin <- round((weather$forecast_tempmin * 9/5) - 459.67, 0)
+      weather$forecast_tempmax <- round((weather$forecast_tempmax * 9/5) - 459.67, 0)
     }
   
   # this is cheap call to count seconds
@@ -123,6 +76,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
     #zoned_time <- clock::zoned_time_now(tz)
     format.POSIXct(as_date_time(mytime), format = "%H:%M")
   })
+  
   
   # for reactive cases (to use input$degrees) remove first then insert
   removeUI(
@@ -147,20 +101,20 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
                   #f7SwipeoutItem(id = paste0("swipe_", cityid), color = "pink", "Alert")
               ),
                f7Popup(id = paste0("popup_", cityid),
-                       title = paste0(selection, " 7 days forecast"), swipeToClose = T, fullsize = T,
+                       title = paste0(selection, " 7 days forecast "), swipeToClose = T, fullsize = T,
                        f7List(
                          lapply(seq(weather$daily_main), function(j){ # these are the forecast points
                            iconpath <- get_weather_icon( weather$daily_icon[j] )
                            
                            f7ListItem(
-                             paste0( weather$daily_tempday[j], "°  " ),
-                             #format.POSIXct(anytime(forecast$time[j], asUTC = T), format = "%a %H:%M"),
-                             sparkline(weather$daily_tempday, # order: target, performance, range1, range2, range3, ...
-                                        type = "bar", 
-                                        #barColor = "LightGray", 
-                                        #negBarColor = "LightGrey", 
-                                        colorMap = c( rep("LightGrey", j-1), "OrangeRed", rep("LightGrey", 8-j) )# highlight current bar
-                                        ),
+                             paste0( weather$daily_tempmin[j], "°", "/", weather$daily_tempmax[j], "°" ),
+                             #htmltools::as.tags(sp),
+                              sparkline(weather$daily_tempmax, # order: target, performance, range1, range2, range3, ...
+                                         type = "bar", 
+                                         #barColor = "LightGray", 
+                                         #negBarColor = "LightGrey", 
+                                         colorMap = c( rep("LightGrey", j-1), "OrangeRed", rep("LightGrey", 8-j) )# highlight current bar
+                                         ),
                              title = tags$b(style = "font-family: Arial;",
                                             format.POSIXct(anytime(weather$daily_time[j] + weather$tz_offset, asUTC = T), 
                                                            format = "%a")

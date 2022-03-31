@@ -38,6 +38,7 @@ get_forecast_onecall <- function(lat, lon, exclude = "minutely,hourly", apikey) 
   res <- httr::GET(call)
   data <- jsonlite::fromJSON(rawToChar(res$content))
   
+  if(TRUE) {
   return(
     list(
       time = data$current$dt,
@@ -49,6 +50,8 @@ get_forecast_onecall <- function(lat, lon, exclude = "minutely,hourly", apikey) 
       main = data$current$weather$main,
       description = data$current$weather$description,
       icon = data$current$weather$icon,
+      forecast_tempmin = min(data$daily$temp$min, na.rm = T),
+      forecast_tempmax = max(data$daily$temp$max, na.rm = T),
       daily_time = data$daily$dt,
       daily_sunrise = data$daily$sunrise,
       daily_sunset = data$daily$sunset,
@@ -59,4 +62,7 @@ get_forecast_onecall <- function(lat, lon, exclude = "minutely,hourly", apikey) 
       daily_icon = bind_rows(data$daily$weather)[["icon"]]
     )
   )
+  } else {
+    simpleError("No data obtained from openweathermaps.org")
+  }
 }
