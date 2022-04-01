@@ -74,7 +74,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
     #time to show is:
     mytime <- lubridate::now(tzone = "UTC") + weather$tz_offset
     #zoned_time <- clock::zoned_time_now(tz)
-    format.POSIXct(as_date_time(mytime), format = "%H:%M")
+    format.POSIXct(lubridate::as_datetime(mytime), format = "%H:%M")
   })
   
   

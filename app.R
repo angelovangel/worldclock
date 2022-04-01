@@ -1,5 +1,5 @@
 library(shiny)
-library(clock)
+#library(clock)
 library(dplyr)
 library(apputils)
 library(shinyjs)
@@ -23,7 +23,7 @@ ui <- f7Page(
   options = list(dark = TRUE), # can we update server-side?
   
   useShinyjs(),
-  pwa(domain = "http://165.22.73.243/worldclock/", output = "www", icon = "www/icons8-sun-500.png"),
+  pwa(domain = "http://165.22.73.243/worldclock/", output = "www", icon = "www/icons8-clock-500.png"),
   
   tags$script(src = "getClientTimezone.js"),
   
@@ -91,7 +91,7 @@ server <- function(input, output, session) {
   observeEvent(input$client_timezone, {
     print(input$client_timezone)
     f7Toast(HTML(paste0("Your timezone is: <br><b>", input$client_timezone, "</b>")), 
-            position = "bottom", 
+            position = "center", 
             closeButton = F, closeTimeout = 3000, icon = f7Icon("timer"))
     #print(input$client_offset)
   })
