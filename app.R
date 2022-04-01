@@ -30,8 +30,8 @@ ui <- f7Page(
   skin = "ios",
   title = "World Clock",
   f7SingleLayout(
-    navbar = f7Navbar(subtitle = "Clock and weather",
-                      #title = "Clock and Weather",
+    navbar = f7Navbar(#subtitle = "Clock and weather",
+                      title = "Clock and Weather",
                       leftPanel = F, 
                       rightPanel = T
                       ), 

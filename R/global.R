@@ -52,12 +52,12 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
                  
   #forecast <- get_forecast(cityid, timestamps = 18)
   if(degrees == "°C") { 
-      temperature <- formatC(weather$temp - 273.15, 1, format = "f", digits = 1)
-      weather$daily_tempday <- round(weather$daily_tempday - 273.15, 1) 
-      weather$daily_tempmin <- round(weather$daily_tempmin - 273.15, 1) 
-      weather$daily_tempmax <- round(weather$daily_tempmax - 273.15, 1) 
-      weather$forecast_tempmin <- round(weather$forecast_tempmin - 273.15, 1)
-      weather$forecast_tempmax <- round(weather$forecast_tempmax - 273.15, 1)
+      temperature <- sprintf("%+3.0f", weather$temp - 273.15)
+      weather$daily_tempday <- formatC(weather$daily_tempday - 273.15, format = "f", digits = 1) 
+      weather$daily_tempmin <- sprintf("%+03.0f", weather$daily_tempmin - 273.15) 
+      weather$daily_tempmax <- sprintf("%+03.0f", weather$daily_tempmax - 273.15) 
+      weather$forecast_tempmin <- sprintf("%+3.0f", weather$forecast_tempmin - 273.15)
+      weather$forecast_tempmax <- sprintf("%+3.0f", weather$forecast_tempmax - 273.15)
     } else { 
       temperature <- round((weather$temp * 9/5) - 459.67, 0)
       weather$daily_tempday <- round((weather$daily_tempday * 9/5) - 459.67, 0)
@@ -89,7 +89,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
     selector = "#mylist", where = "beforeEnd",
     ui = tags$div( id = paste0("item_", cityid), # use cityid as tag.. should be ok
               f7Swipeout(
-                  f7ListItem(paste0(temperature,"°"), 
+                  f7ListItem(tags$b( paste0(temperature,"°") ), 
                              href = "#", # this is used here just to add the class needed to make it look like a clickable link
                              #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
                              #right = selection,  
@@ -101,13 +101,14 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
                   #f7SwipeoutItem(id = paste0("swipe_", cityid), color = "pink", "Alert")
               ),
                f7Popup(id = paste0("popup_", cityid),
-                       title = paste0(selection, " 7 days forecast "), swipeToClose = T, fullsize = T,
+                       title = paste0(selection, " 7 days forecast (", weather$forecast_tempmin, "°/",weather$forecast_tempmax,"°)"), 
+                       swipeToClose = T, fullsize = T,
                        f7List(
                          lapply(seq(weather$daily_main), function(j){ # these are the forecast points
                            iconpath <- get_weather_icon( weather$daily_icon[j] )
                            
                            f7ListItem(
-                             paste0( weather$daily_tempmin[j], "°", "/", weather$daily_tempmax[j], "°" ),
+                             paste0( weather$daily_tempmin[j], "°"),
                              #htmltools::as.tags(sp),
                              # try boxplots -> low_whisker, q1, median, q3, high_whisker, ..showOutliers = FALSE
                              sparkline(c(weather$forecast_tempmin, 
@@ -116,14 +117,14 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
                                               weather$daily_tempmax[j], 
                                               weather$forecast_tempmax), 
                                        type = "box", raw = TRUE, showOutliers = FALSE,
-                                       lineColor = "Grey", lineWidth = 3, medianColor = NULL,
+                                       lineColor = "Grey", 
+                                       lineWidth = 6,
+                                       medianColor = "LightGrey",
                                        boxLineColor = "Grey", 
                                        boxFillColor = "LightGrey", 
                                        whiskerColor = "Grey"),
-                              #sparkline(weather$daily_tempmax, # order: target, performance, range1, range2, range3, ...
-                                         #type = "bar", 
-                                         #colorMap = c( rep("LightGrey", j-1), "OrangeRed", rep("LightGrey", 8-j) )# highlight current bar
-                                         #),
+                              paste0( weather$daily_tempmax[j], "°" ),
+                        
                              title = tags$b(style = "font-family: Arial;",
                                             format.POSIXct(anytime(weather$daily_time[j] + weather$tz_offset, asUTC = T), 
                                                            format = "%a")
