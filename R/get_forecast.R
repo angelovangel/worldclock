@@ -38,18 +38,19 @@ get_forecast_onecall <- function(lat, lon, exclude = "minutely,hourly", apikey) 
   res <- httr::GET(call)
   data <- jsonlite::fromJSON(rawToChar(res$content))
   
+  # [1] because more than one hit may be returned by the api
   if(TRUE) {
   return(
     list(
-      time = data$current$dt,
-      tz = data$timezone,
-      tz_offset = data$timezone_offset, 
-      sunrise = data$current$sunrise, 
-      sunset = data$current$sunset,
-      temp = data$current$temp,
-      main = data$current$weather$main,
-      description = data$current$weather$description,
-      icon = data$current$weather$icon,
+      time = data$current$dt[1],
+      tz = data$timezone[1],
+      tz_offset = data$timezone_offset[1], 
+      sunrise = data$current$sunrise[1], 
+      sunset = data$current$sunset[1],
+      temp = data$current$temp[1],
+      main = data$current$weather$main[1],
+      description = data$current$weather$description[1],
+      icon = data$current$weather$icon[1],
       forecast_tempmin = min(data$daily$temp$min, na.rm = T),
       forecast_tempmax = max(data$daily$temp$max, na.rm = T),
       daily_time = data$daily$dt,

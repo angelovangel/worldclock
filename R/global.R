@@ -109,12 +109,21 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
                            f7ListItem(
                              paste0( weather$daily_tempmin[j], "°", "/", weather$daily_tempmax[j], "°" ),
                              #htmltools::as.tags(sp),
-                              sparkline(weather$daily_tempmax, # order: target, performance, range1, range2, range3, ...
-                                         type = "bar", 
-                                         #barColor = "LightGray", 
-                                         #negBarColor = "LightGrey", 
-                                         colorMap = c( rep("LightGrey", j-1), "OrangeRed", rep("LightGrey", 8-j) )# highlight current bar
-                                         ),
+                             # try boxplots -> low_whisker, q1, median, q3, high_whisker, ..showOutliers = FALSE
+                             sparkline(c(weather$forecast_tempmin, 
+                                              weather$daily_tempmin[j], 
+                                              weather$daily_tempday[j], 
+                                              weather$daily_tempmax[j], 
+                                              weather$forecast_tempmax), 
+                                       type = "box", raw = TRUE, showOutliers = FALSE,
+                                       lineColor = "Grey", lineWidth = 3, medianColor = NULL,
+                                       boxLineColor = "Grey", 
+                                       boxFillColor = "LightGrey", 
+                                       whiskerColor = "Grey"),
+                              #sparkline(weather$daily_tempmax, # order: target, performance, range1, range2, range3, ...
+                                         #type = "bar", 
+                                         #colorMap = c( rep("LightGrey", j-1), "OrangeRed", rep("LightGrey", 8-j) )# highlight current bar
+                                         #),
                              title = tags$b(style = "font-family: Arial;",
                                             format.POSIXct(anytime(weather$daily_time[j] + weather$tz_offset, asUTC = T), 
                                                            format = "%a")
