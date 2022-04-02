@@ -3,6 +3,7 @@ library(shiny)
 library(dplyr)
 library(apputils)
 library(shinyjs)
+library(shinydisconnect)
 library(stringr)
 library(shinyMobile)
 library(shiny.pwa)
@@ -21,6 +22,7 @@ secret_text <- Sys.getenv("secret_text")
 ########################### UI ##########################
 ui <- f7Page(
   options = list(dark = TRUE), # can we update server-side?
+  shinydisconnect::disconnectMessage2(),
   
   useShinyjs(),
   pwa(domain = "http://165.22.73.243/worldclock/", output = "www", icon = "www/icons8-clock-500.png"),
@@ -143,7 +145,7 @@ server <- function(input, output, session) {
       
       insertListItem(myselection, data = cities, degrees = input$degrees)
       
-      if(myselection == "Abu Dhabi, AE") {
+      if(myselection == "Abu Dhabi, AE" && input$client_timezone == "Asia/Dubai") { # show only there...
           f7Toast(text = secret_text, position = "center", closeButton = F, closeTimeout = 3000, 
                   icon = f7Icon("heart", color = "red")
                   )
