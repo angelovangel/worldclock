@@ -22,7 +22,12 @@ secret_text <- Sys.getenv("secret_text")
 ########################### UI ##########################
 ui <- f7Page(
   options = list(dark = TRUE), # can we update server-side?
-  shinydisconnect::disconnectMessage2(),
+  shinydisconnect::disconnectMessage(
+    text = "Session timed out", refresh = "Refresh", size = 60, colour = "grey", 
+    background = "rgba(64, 64, 64, 0.9)", width = "full", top = "center", 
+    overlayColour = "#999", overlayOpacity = 0.9, 
+    css = "padding: 15px !important; box-shadow: none !important;"
+  ),
   
   useShinyjs(),
   pwa(domain = "http://165.22.73.243/worldclock/", output = "www", icon = "www/icons8-clock-500.png"),
@@ -43,13 +48,11 @@ ui <- f7Page(
                 f7Button("removeItem", label = f7Icon("minus", color = "white"), color = "black", size = "large")
       ), 
       f7Radio("degrees", "", choices = c("°C", "°F"), selected = "°C"),
+      f7Button("reset", label = f7Icon("arrow_counterclockwise", color = "white"), color = "black", size = "large"),
       side = "right", id = "mypanel", effect = "reveal"),
     
+    
     # main
-    
-    
-    
-    
     f7SmartSelect(virtualList = TRUE, # because of the many elements in the list
                   inputId = "selectTZ", 
                   label = "Select city to add", 
@@ -180,6 +183,11 @@ server <- function(input, output, session) {
     # and toggle panel
     updateF7Panel(id = "mypanel")
     
+  })
+  
+  # reload page on reset
+  observeEvent(input$reset, {
+    shinyjs::refresh()
   })
   
 }
