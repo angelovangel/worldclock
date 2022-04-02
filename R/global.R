@@ -96,7 +96,8 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
                              media = apputils::icon(list(src = iconurl, width = "40px"), lib = "local"), 
                              title = tags$b( style = "font-family: Arial;", mytime), 
                              header = selection, 
-                             footer = NULL #weather$main
+                             footer = paste0("↑", format.POSIXct(anytime(weather$sunrise + weather$tz_offset, asUTC = T), format = "%H:%M"), 
+                                             " ↓", format.POSIXct(anytime(weather$sunset + weather$tz_offset, asUTC = T), format = "%H:%M")) #weather$main
                              )
                   #f7SwipeoutItem(id = paste0("swipe_", cityid), color = "pink", "Alert")
               ),
