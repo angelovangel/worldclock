@@ -89,14 +89,14 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
     selector = "#mylist", where = "beforeEnd",
     ui = tags$div( id = paste0("item_", cityid), # use cityid as tag.. should be ok
               f7Swipeout(
-                  f7ListItem(tags$b( paste0(temperature,"°") ), 
+                  f7ListItem(paste0(weather$main, " "), tags$b( paste0(temperature,"°") ), 
                              href = "#", # this is used here just to add the class needed to make it look like a clickable link
                              #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
                              #right = selection,  
                              media = apputils::icon(list(src = iconurl, width = "40px"), lib = "local"), 
                              title = tags$b( style = "font-family: Arial;", mytime), 
                              header = selection, 
-                             footer = weather$main
+                             footer = NULL #weather$main
                              )
                   #f7SwipeoutItem(id = paste0("swipe_", cityid), color = "pink", "Alert")
               ),
@@ -108,7 +108,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
                            iconpath <- get_weather_icon( weather$daily_icon[j] )
                            
                            f7ListItem(
-                             paste0( weather$daily_tempmin[j], "°"),
+                             tags$b(style = "font-family: monospace;", paste0( weather$daily_tempmin[j], "°") ), # monospace for temp to avoid shifting boxplot
                              #htmltools::as.tags(sp),
                              # try boxplots -> low_whisker, q1, median, q3, high_whisker, ..showOutliers = FALSE
                              sparkline(c(weather$forecast_tempmin, 
@@ -123,7 +123,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
                                        boxLineColor = "Grey", 
                                        boxFillColor = "LightGrey", 
                                        whiskerColor = "Grey"),
-                              paste0( weather$daily_tempmax[j], "°" ),
+                              tags$b( style = "font-family: monospace;", paste0( weather$daily_tempmax[j], "°" ) ),
                         
                              title = tags$b(style = "font-family: Arial;",
                                             format.POSIXct(anytime(weather$daily_time[j] + weather$tz_offset, asUTC = T), 

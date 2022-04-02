@@ -87,10 +87,16 @@ ui <- f7Page(
 ########################### server ##########################
 server <- function(input, output, session) {
   
-  # try to get client timezone
+  session$allowReconnect(TRUE)
+ 
+   # try to get client timezone
   observeEvent(input$client_timezone, {
     print(input$client_timezone)
-    f7Toast(HTML(paste0("Your timezone is: <br><b>", input$client_timezone, "</b>")), 
+    print(input$client_offset)
+    f7Toast(HTML(paste0("Your timezone is: <br><b>", 
+                        input$client_timezone, "</b>", "<br>", 
+                        "(UTC ",input$client_offset/60, " hours)")
+                 ), 
             position = "center", 
             closeButton = F, closeTimeout = 3000, icon = f7Icon("timer"))
     #print(input$client_offset)
@@ -173,7 +179,6 @@ server <- function(input, output, session) {
     updateF7Panel(id = "mypanel")
     
   })
-  
   
 }
 
