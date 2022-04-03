@@ -145,6 +145,12 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
              
     )
   )
+  #open popup #=============================================
+  
+  onclick(paste0("item_", cityid), 
+          shinyMobile::updateF7Popup(id = paste0("popup_", cityid))
+  )
+  #============================================================================
   
 }
 

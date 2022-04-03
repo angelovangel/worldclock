@@ -159,10 +159,6 @@ server <- function(input, output, session) {
       # and toggle panel
       updateF7Panel(id = "mypanel")
       
-      #open popup, here and not in the insertListItem func #=============================================
-      cityid <- get_cityid(input = myselection, data = cities)
-      onclick(paste0("item_", cityid), shinyMobile::updateF7Popup(id = paste0("popup_", cityid)))
-      #============================================================================
   })
   
   # actually remove items
