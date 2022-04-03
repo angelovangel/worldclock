@@ -136,9 +136,6 @@ server <- function(input, output, session) {
   
   # start with a list of 3 time zones, otherwise strange things happen with the smartselect input
   observe({
-    # validate(
-    #   need(!is.na(pingr::ping("google.com", count = 1)), "No internet connection!")
-    # )
     lapply(currList, insertListItem, data = cities, degrees = input$degrees)
   })
   
@@ -161,6 +158,11 @@ server <- function(input, output, session) {
       
       # and toggle panel
       updateF7Panel(id = "mypanel")
+      
+      #open popup, here and not in the insertListItem func #=============================================
+      cityid <- get_cityid(input = myselection, data = cities)
+      onclick(paste0("item_", cityid), shinyMobile::updateF7Popup(id = paste0("popup_", cityid)))
+      #============================================================================
   })
   
   # actually remove items
@@ -184,6 +186,7 @@ server <- function(input, output, session) {
     updateF7Panel(id = "mypanel")
     
   })
+  
   
   # reload page on reset
   observeEvent(input$reset, {

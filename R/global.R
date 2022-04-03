@@ -67,6 +67,9 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
       weather$forecast_tempmax <- round((weather$forecast_tempmax * 9/5) - 459.67, 0)
     }
   
+  mysunrise <- format.POSIXct(anytime(weather$sunrise + weather$tz_offset, asUTC = T), format = "%H:%M")
+  mysunset <- format.POSIXct(anytime(weather$sunset + weather$tz_offset, asUTC = T), format = "%H:%M")
+    
   # this is cheap call to count seconds
   mytime <- renderText({
     invalidateLater(2000)
@@ -95,9 +98,10 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
                              #right = selection,  
                              media = apputils::icon(list(src = iconurl, width = "40px"), lib = "local"), 
                              title = tags$b( style = "font-family: Arial;", mytime), 
-                             header = selection, 
-                             footer = paste0("↑", format.POSIXct(anytime(weather$sunrise + weather$tz_offset, asUTC = T), format = "%H:%M"), 
-                                             " ↓", format.POSIXct(anytime(weather$sunset + weather$tz_offset, asUTC = T), format = "%H:%M")) #weather$main
+                             header = tags$b(selection), 
+                             footer = paste0("↑", mysunrise, 
+                                             " ↓", mysunset
+                                             ) #weather$main
                              )
                   #f7SwipeoutItem(id = paste0("swipe_", cityid), color = "pink", "Alert")
               ),
@@ -142,8 +146,6 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
     )
   )
   
-  #open popup
-  onclick(paste0("item_", cityid), shinyMobile::updateF7Popup(id = paste0("popup_", cityid)))
 }
 
 
