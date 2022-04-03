@@ -191,7 +191,7 @@ server <- function(input, output, session) {
   
   # really?
   session$onSessionEnded(function() {
-    shinyjs::refresh()
+    stopApp()
   })
 }
 
