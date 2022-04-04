@@ -3,7 +3,7 @@ library(shiny)
 library(dplyr)
 library(apputils)
 library(shinyjs)
-library(shinydisconnect)
+#library(shinydisconnect)
 library(stringr)
 library(shinyMobile)
 library(shiny.pwa)
@@ -12,9 +12,8 @@ source("R/global.R")
 source("R/get_forecast.R")
 
 # to acces on the lan
-options(shiny.host = "0.0.0.0", shiny.port = 8888)
+#options(shiny.host = "0.0.0.0", shiny.port = 8888)
 
-#tzdbnames <- c(Sys.timezone(), clock::tzdb_names() )
 cities <- readRDS("data/cities500k.rds")
 
 secret_text <- Sys.getenv("secret_text")
@@ -22,12 +21,12 @@ secret_text <- Sys.getenv("secret_text")
 ########################### UI ##########################
 ui <- f7Page(
   options = list(dark = TRUE), # can we update server-side?
-  shinydisconnect::disconnectMessage(
-    text = "Session timed out", refresh = "Refresh", size = 30, colour = "grey", 
-    background = "rgba(39, 55, 70, 0.9)", width = "full", top = "center", 
-    overlayColour = "#999", overlayOpacity = 1, 
-    css = "padding: 15px !important; box-shadow: none !important;"
-  ),
+  # shinydisconnect::disconnectMessage(
+  #   text = "Session timed out", refresh = "Refresh", size = 30, colour = "grey", 
+  #   background = "rgba(39, 55, 70, 0.9)", width = "full", top = "center", 
+  #   overlayColour = "#999", overlayOpacity = 1, 
+  #   css = "padding: 15px !important; box-shadow: none !important;"
+  # ),
   
   useShinyjs(),
   pwa(domain = "http://165.22.73.243/worldclock/", output = "www", icon = "www/icons8-clock-500.png"),
@@ -42,12 +41,12 @@ ui <- f7Page(
                       leftPanel = F, 
                       rightPanel = T
                       ), 
-    panels = f7Panel(
+    panels = f7Panel(title = "Settings",
+      f7Radio("degrees", "", choices = c("°C", "°F"), selected = "°C"),
       f7Segment(container = "row",
                 f7Button("appendItem", label = f7Icon("plus", color = "white") , color = "black", size = "large"),
                 f7Button("removeItem", label = f7Icon("minus", color = "white"), color = "black", size = "large")
       ), 
-      f7Radio("degrees", "", choices = c("°C", "°F"), selected = "°C"),
       f7Button("reset", label = f7Icon("arrow_counterclockwise", color = "white"), color = "black", size = "large"),
       side = "right", id = "mypanel", effect = "reveal"),
     
@@ -74,12 +73,9 @@ ui <- f7Page(
                   popupCloseLinkText = "Cancel"),
     
     
-    #uiOutput("addedItems"),
+    
     f7List(id = "mylist"
            
-       #f7Swipeout(id = "myswipeout",
-         #tag = f7ListItem("one"), side = "right", f7SwipeoutItem(id = "del1", color = "pink", "Delete")
-       #)
     ),
     
     #f7Popup(id = "mypopup", "to be updated"),
@@ -110,8 +106,6 @@ server <- function(input, output, session) {
   itemsToHide <- c("selectTZ", "selectTZcurrent")
   lapply(itemsToHide, shinyjs::hide)
   
-  
-  #updateSelectizeInput("selectTZ", choices = cities$value, session = session, server = T)
   updateF7SmartSelect("selectTZ", choices = cities$value)
   
   

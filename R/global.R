@@ -92,16 +92,17 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
     selector = "#mylist", where = "beforeEnd",
     ui = tags$div( id = paste0("item_", cityid), # use cityid as tag.. should be ok
               f7Swipeout(
-                  f7ListItem(paste0(weather$main, " "), tags$b( paste0(temperature,"°") ), 
+                  f7ListItem(tags$b( paste0(temperature,"°") ), 
                              href = "#", # this is used here just to add the class needed to make it look like a clickable link
                              #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
                              #right = selection,  
                              media = apputils::icon(list(src = iconurl, width = "40px"), lib = "local"), 
                              title = tags$b( style = "font-family: Arial;", mytime), 
                              header = tags$b(selection), 
-                             footer = paste0("↑", mysunrise, 
-                                             " ↓", mysunset
-                                             ) #weather$main
+                             footer = weather$description
+                             # footer = paste0("↑", mysunrise, 
+                             #                 " ↓", mysunset
+                             #                 ) #weather$main
                              )
                   #f7SwipeoutItem(id = paste0("swipe_", cityid), color = "pink", "Alert")
               ),
