@@ -64,6 +64,6 @@ get_forecast_onecall <- function(lat, lon, exclude = "minutely,hourly", apikey) 
     )
   )
   } else {
-    simpleError("No data obtained from openweathermaps.org")
+    simpleError("No data obtained from openweathermap.org")
   }
 }

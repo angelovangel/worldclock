@@ -35,6 +35,13 @@ get_weather_icon <- function(iconcode) {
   }
 }
 
+# define style for fonts
+mystyle <- function(fontsize) {
+  paste0("font-family: 'Helvetica Neue Ultra Thin', 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial; font-size:", 
+         fontsize, "px;"
+  )
+}
+
 insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
   
   # call once
@@ -92,14 +99,14 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
     selector = "#mylist", where = "beforeEnd",
     ui = tags$div( id = paste0("item_", cityid), # use cityid as tag.. should be ok
               f7Swipeout(
-                  f7ListItem(tags$b( paste0(temperature,"°") ), 
+                  f7ListItem(tags$div(style = mystyle(fontsize = 15), paste0(temperature,"°") ), 
                              href = "#", # this is used here just to add the class needed to make it look like a clickable link
                              #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
                              #right = selection,  
                              media = apputils::icon(list(src = iconurl, width = "40px"), lib = "local"), 
-                             title = tags$b( style = "font-family: Arial;", mytime), 
-                             header = tags$b(selection), 
-                             footer = weather$description
+                             title = tags$div( style = mystyle(fontsize = 30), mytime), 
+                             header = tags$b(style = mystyle(fontsize = 15), selection), 
+                             footer = tags$div(style = mystyle(fontsize = 13), weather$description)
                              # footer = paste0("↑", mysunrise, 
                              #                 " ↓", mysunset
                              #                 ) #weather$main
@@ -107,7 +114,9 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
                   #f7SwipeoutItem(id = paste0("swipe_", cityid), color = "pink", "Alert")
               ),
                f7Popup(id = paste0("popup_", cityid),
-                       title = paste0(selection, " 7 days forecast (", weather$forecast_tempmin, "°/",weather$forecast_tempmax,"°)"), 
+                       title = tags$div(style = mystyle(fontsize = 15),
+                         paste0(selection, " 7 days forecast (", weather$forecast_tempmin, "°/",weather$forecast_tempmax,"°)")
+                         ), 
                        swipeToClose = T, fullsize = T,
                        f7List(
                          lapply(seq(weather$daily_main), function(j){ # these are the forecast points
@@ -123,21 +132,21 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
                                               weather$daily_tempmax[j], 
                                               weather$forecast_tempmax), 
                                        type = "box", raw = TRUE, showOutliers = FALSE,
-                                       lineColor = "Grey", 
-                                       lineWidth = 6,
+                                       lineColor = "LightGrey", 
+                                       lineWidth = 4,
                                        medianColor = "LightGrey",
-                                       boxLineColor = "Grey", 
+                                       boxLineColor = "LightGrey", 
                                        boxFillColor = "LightGrey", 
-                                       whiskerColor = "Grey"),
-                              tags$b( style = "font-family: monospace;", paste0( weather$daily_tempmax[j], "°" ) ),
+                                       whiskerColor = "LightGrey"),
+                             tags$b( style = "font-family: monospace;", paste0( weather$daily_tempmax[j], "°" ) ),
                         
-                             title = tags$b(style = "font-family: Arial;",
+                             title = tags$div(style = mystyle(fontsize = 20),
                                             format.POSIXct(anytime(weather$daily_time[j] + weather$tz_offset, asUTC = T), 
                                                            format = "%a")
                                             ),
                              header = format.POSIXct(anytime(weather$daily_time[j] + weather$tz_offset, asUTC = T), 
                                                      format = "%e %b"),
-                             footer = weather$daily_main[j],
+                             footer = tags$div(style = mystyle(fontsize = 13), weather$daily_main[j]),
                              media = apputils::icon(list(src = iconpath, width = "40px"), lib = "local"),
                              )
                          }) 
