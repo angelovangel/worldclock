@@ -96,7 +96,7 @@ server <- function(input, output, session) {
     print(input$client_offset)
     f7Toast(HTML(paste0("Your timezone is: <br><b>", 
                         input$client_timezone, "</b>", "<br>", 
-                        "(UTC ",input$client_offset/60, " hours)")
+                        "(UTC ", sprintf("%+.0f", -input$client_offset/60), " hours)") # the client offset is UTC relative to client!!
                  ), 
             position = "center", 
             closeButton = F, closeTimeout = 3000, icon = f7Icon("timer"))
@@ -130,14 +130,16 @@ server <- function(input, output, session) {
   
   # start with a list of 3 time zones, otherwise strange things happen with the smartselect input
   observe({
-    lapply(currList, insertListItem, data = cities, degrees = input$degrees)
+    lapply(currList, insertListItem, data = cities, degrees = input$degrees, clientoffset = input$client_offset)
   })
   
   # insertUI when selected
   observeEvent(input$selectTZ, ignoreInit = TRUE, {
       myselection <- input$selectTZ
       
-      insertListItem(myselection, data = cities, degrees = input$degrees)
+      insertListItem(myselection, data = cities, 
+                     degrees = input$degrees, 
+                     clientoffset = input$client_offset)
       
       if(myselection == "Abu Dhabi, AE" && input$client_timezone == "Asia/Dubai") { # show only there...
           f7Toast(text = secret_text, position = "center", closeButton = F, closeTimeout = 3000, 
@@ -184,9 +186,9 @@ server <- function(input, output, session) {
   })
   
   # really?
-  session$onSessionEnded(function() {
-    stopApp()
-  })
+  # session$onSessionEnded(function() {
+  #   stopApp()
+  # })
 }
 
 

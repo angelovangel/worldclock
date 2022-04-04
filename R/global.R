@@ -42,7 +42,7 @@ mystyle <- function(fontsize) {
   )
 }
 
-insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
+insertListItem <- function(selection, data, degrees = c("°C", "°F"), clientoffset) {
   
   # call once
   # selection is "Berlin, DE", from there we get the lat lon and make one API call
@@ -76,13 +76,23 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
   
   mysunrise <- format.POSIXct(anytime(weather$sunrise + weather$tz_offset, asUTC = T), format = "%H:%M")
   mysunset <- format.POSIXct(anytime(weather$sunset + weather$tz_offset, asUTC = T), format = "%H:%M")
-    
+  
+  # calculate location offset in hours relative to client (client offset to UTC in minutes given as param)
+  listItemOffset <- renderText({
+    invalidateLater(10000)
+    # generate diff
+    myoffset <- difftime(time1 = lubridate::now(tzone = "UTC") + weather$tz_offset, 
+                         time2 = lubridate::now(tzone = "UTC") + (-clientoffset*60), units = "hours")
+    paste0( sprintf("%+.0f", myoffset), " hours" ) 
+  })
+  
+  
   # this is cheap call to count seconds
   mytime <- renderText({
     invalidateLater(2000)
     
     #time to show is:
-    mytime <- lubridate::now(tzone = "UTC") + weather$tz_offset
+    mytime <- lubridate::now(tzone = "UTC") + weather$tz_offset # in seconds
     #zoned_time <- clock::zoned_time_now(tz)
     format.POSIXct(lubridate::as_datetime(mytime), format = "%H:%M")
   })
@@ -104,8 +114,8 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
                              #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
                              #right = selection,  
                              media = apputils::icon(list(src = iconurl, width = "40px"), lib = "local"), 
-                             title = tags$div( style = mystyle(fontsize = 30), mytime), 
-                             header = tags$b(style = mystyle(fontsize = 15), selection), 
+                             title = tags$div( style = mystyle(fontsize = 32), mytime), 
+                             header = tags$div(style = mystyle(fontsize = 15), selection, listItemOffset), 
                              footer = tags$div(style = mystyle(fontsize = 13), weather$description)
                              # footer = paste0("↑", mysunrise, 
                              #                 " ↓", mysunset
@@ -140,7 +150,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F") ) {
                                        whiskerColor = "LightGrey"),
                              tags$b( style = "font-family: monospace;", paste0( weather$daily_tempmax[j], "°" ) ),
                         
-                             title = tags$div(style = mystyle(fontsize = 20),
+                             title = tags$div(style = mystyle(fontsize = 22),
                                             format.POSIXct(anytime(weather$daily_time[j] + weather$tz_offset, asUTC = T), 
                                                            format = "%a")
                                             ),

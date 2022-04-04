@@ -24,7 +24,7 @@ get_forecast <- function(id, timestamps = 8) {
   )
 }
 
-
+# https://openweathermap.org/api/one-call-api
 get_forecast_onecall <- function(lat, lon, exclude = "minutely,hourly", apikey) {
   require(httr)
   require(jsonlite)
