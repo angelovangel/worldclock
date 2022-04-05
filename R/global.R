@@ -125,15 +125,9 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), clientoff
                              #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
                              #right = selection,  
                              media = apputils::icon(list(src = iconurl, width = "40px"), lib = "local"), 
-                             title = tags$div( style = mystyle(fontsize = 32), mytime), 
-                             header = tags$div(style = mystyle(fontsize = 15), 
-                                               tags$div(style = mystyle(fontsize = 17), selection), 
-                                               listItemOffset
-                                               ), 
-                             footer = NULL#tags$div(style = mystyle(fontsize = 13), weather$description)
-                             # footer = paste0("↑", mysunrise, 
-                             #                 " ↓", mysunset
-                             #                 ) #weather$main
+                             title = tags$div( style = mystyle(fontsize = 30), mytime), 
+                             header = tags$div(style = mystyle(fontsize = 16), selection), 
+                             footer = tags$div(style = mystyle(fontsize = 13), listItemOffset)
                              )
                   #f7SwipeoutItem(id = paste0("swipe_", cityid), color = "pink", "Alert")
               ),
