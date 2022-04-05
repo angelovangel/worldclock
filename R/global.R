@@ -141,7 +141,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), clientoff
                            iconpath <- get_weather_icon( weather$daily_icon[j] )
                            
                            f7ListItem(
-                             tags$b(style = "font-family: monospace;", paste0( weather$daily_tempmin[j], "°") ), # monospace for temp to avoid shifting boxplot
+                             tags$b(style = "font-family: 'Roboto Mono', monospace;", paste0( weather$daily_tempmin[j], "°") ), # monospace for temp to avoid shifting boxplot
                              #htmltools::as.tags(sp),
                              # try boxplots -> low_whisker, q1, median, q3, high_whisker, ..showOutliers = FALSE
                              sparkline(c(weather$forecast_tempmin, 
@@ -151,7 +151,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), clientoff
                                               weather$forecast_tempmax), 
                                        type = "box", raw = TRUE, showOutliers = FALSE,
                                        lineColor = "LightGrey", 
-                                       lineWidth = 4,
+                                       lineWidth = 3,
                                        medianColor = "LightGrey",
                                        boxLineColor = "LightGrey", 
                                        boxFillColor = "LightGrey", 
