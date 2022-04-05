@@ -29,7 +29,10 @@ ui <- f7Page(
   # ),
   
   useShinyjs(),
-  pwa(domain = "http://165.22.73.243/worldclock/", output = "www", icon = "www/icons8-clock-500.png"),
+  pwa(domain = "http://165.22.73.243/worldclock/", 
+      output = "www", 
+      icon = "www/icons8-clock-500.png", 
+      title = "Clock and Weather"),
   
   tags$script(src = "getClientTimezone.js"),
   

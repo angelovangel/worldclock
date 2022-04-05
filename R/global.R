@@ -83,7 +83,15 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), clientoff
     # generate diff
     myoffset <- difftime(time1 = lubridate::now(tzone = "UTC") + weather$tz_offset, 
                          time2 = lubridate::now(tzone = "UTC") + (-clientoffset*60), units = "hours")
-    paste0( sprintf("%+.0f", myoffset), " hours" ) 
+    # some calculations to see whether it is today, tomorrow or yesterday 
+    day_there <- day( lubridate::now(tzone = "UTC") + weather$tz_offset )
+    day_here <- day( lubridate::now(tzone = "UTC") + (-clientoffset*60) )
+    myday <- case_when(
+      day_here - day_there == 0 ~ "today",
+      day_here - day_there > 0 ~ "yesterday",
+      day_here - day_there < 0 ~ "tomorrow"
+    )
+    paste0(myday, ", ", sprintf("%+.0f", myoffset), " hours" ) 
   })
   
   
@@ -109,7 +117,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), clientoff
     selector = "#mylist", where = "beforeEnd",
     ui = tags$div( id = paste0("item_", cityid), # use cityid as tag.. should be ok
               f7Swipeout(
-                  f7ListItem(tags$div(style = mystyle(fontsize = 15, align = "right"), 
+                  f7ListItem(tags$div(style = mystyle(fontsize = 17, align = "right"), 
                                       paste0(temperature, "°"), 
                                       tags$br(weather$description)
                                       ), 
@@ -118,7 +126,10 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), clientoff
                              #right = selection,  
                              media = apputils::icon(list(src = iconurl, width = "40px"), lib = "local"), 
                              title = tags$div( style = mystyle(fontsize = 32), mytime), 
-                             header = tags$div(style = mystyle(fontsize = 15), selection, listItemOffset), 
+                             header = tags$div(style = mystyle(fontsize = 15), 
+                                               tags$div(style = mystyle(fontsize = 17), selection), 
+                                               listItemOffset
+                                               ), 
                              footer = NULL#tags$div(style = mystyle(fontsize = 13), weather$description)
                              # footer = paste0("↑", mysunrise, 
                              #                 " ↓", mysunset
