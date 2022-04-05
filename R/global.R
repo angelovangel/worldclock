@@ -36,9 +36,9 @@ get_weather_icon <- function(iconcode) {
 }
 
 # define style for fonts
-mystyle <- function(fontsize) {
+mystyle <- function(fontsize, align = "left") {
   paste0("font-family: 'Helvetica Neue Ultra Thin', 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial; font-size:", 
-         fontsize, "px;"
+         fontsize, "px; text-align: ", align, ";"
   )
 }
 
@@ -109,14 +109,17 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), clientoff
     selector = "#mylist", where = "beforeEnd",
     ui = tags$div( id = paste0("item_", cityid), # use cityid as tag.. should be ok
               f7Swipeout(
-                  f7ListItem(tags$div(style = mystyle(fontsize = 15), paste0(temperature,"°") ), 
+                  f7ListItem(tags$div(style = mystyle(fontsize = 15, align = "right"), 
+                                      paste0(temperature, "°"), 
+                                      tags$br(weather$description)
+                                      ), 
                              href = "#", # this is used here just to add the class needed to make it look like a clickable link
                              #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
                              #right = selection,  
                              media = apputils::icon(list(src = iconurl, width = "40px"), lib = "local"), 
                              title = tags$div( style = mystyle(fontsize = 32), mytime), 
                              header = tags$div(style = mystyle(fontsize = 15), selection, listItemOffset), 
-                             footer = tags$div(style = mystyle(fontsize = 13), weather$description)
+                             footer = NULL#tags$div(style = mystyle(fontsize = 13), weather$description)
                              # footer = paste0("↑", mysunrise, 
                              #                 " ↓", mysunset
                              #                 ) #weather$main
