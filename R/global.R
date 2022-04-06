@@ -53,7 +53,7 @@ my_temp_color <- function(temp) {
 }
 
   
-insertListItem <- function(selection, data, degrees = c("°C", "°F"), clientoffset) {
+insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeformat = c(12, 24), clientoffset) {
   
   # call once
   # selection is "Berlin, DE", from there we get the lat lon and make one API call
@@ -110,10 +110,13 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), clientoff
     invalidateLater(2000)
     
     #time to show is:
-    mytime <- lubridate::now(tzone = "UTC") + weather$tz_offset # in seconds
+    time <- lubridate::now(tzone = "UTC") + weather$tz_offset # in seconds
     #zoned_time <- clock::zoned_time_now(tz)
-    format.POSIXct(lubridate::as_datetime(mytime), format = "%H:%M")
-  })
+    ifelse(timeformat == 24,
+    format.POSIXct(lubridate::as_datetime(time), format = "%H:%M"),
+    format.POSIXct(lubridate::as_datetime(time), format = "%I:%M %p")
+    )
+    })
   
   
   # for reactive cases (to use input$degrees) remove first then insert
@@ -162,9 +165,9 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), clientoff
                                        type = "box", raw = TRUE, showOutliers = FALSE,
                                        lineColor = "Grey", 
                                        lineWidth = 3,
-                                       medianColor = "LightGrey",
+                                       medianColor = "black",
                                        boxLineColor = "LightGrey", 
-                                       boxFillColor = my_temp_color( weather$daily_tempmax[j] ), 
+                                       boxFillColor = my_temp_color( weather$daily_tempday[j] ), 
                                        whiskerColor = "LightGrey"),
                              tags$b( style = "font-family: monospace;", paste0( daily_tempmax[j], "°" ) ),
                         

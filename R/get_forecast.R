@@ -48,6 +48,7 @@ get_forecast_onecall <- function(lat, lon, exclude = "minutely,hourly", apikey) 
       sunrise = data$current$sunrise[1], 
       sunset = data$current$sunset[1],
       temp = data$current$temp[1],
+      feels_like = data$current$feels_like,
       main = data$current$weather$main[1],
       description = data$current$weather$description[1],
       icon = data$current$weather$icon[1],
@@ -59,6 +60,7 @@ get_forecast_onecall <- function(lat, lon, exclude = "minutely,hourly", apikey) 
       daily_tempmin = data$daily$temp$min,
       daily_tempmax = data$daily$temp$max,
       daily_tempday = data$daily$temp$day,
+      daily_pop = data$daily$pop,
       daily_main = bind_rows(data$daily$weather)[["main"]],
       daily_icon = bind_rows(data$daily$weather)[["icon"]]
     )

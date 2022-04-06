@@ -46,11 +46,13 @@ ui <- f7Page(
                       ), 
     panels = f7Panel(title = "Settings",
       f7Radio("degrees", "", choices = c("°C", "°F"), selected = "°C"),
+      #f7Radio("timeformat", "", choices = c(12, 24), selected = 24),
       f7Segment(container = "row",
                 f7Button("appendItem", label = f7Icon("plus", color = "white") , color = "black", size = "large"),
                 f7Button("removeItem", label = f7Icon("minus", color = "white"), color = "black", size = "large")
       ), 
-      f7Button("reset", label = f7Icon("arrow_counterclockwise", color = "white"), color = "black", size = "large"),
+      f7Button("reset", label = tags$div("Reload", f7Icon("arrow_counterclockwise", color = "white")), color = "black", size = "large"),
+      f7Button("about", label = tags$div("About", f7Icon("app", color = "white")), color = "black", size = "large"),
       side = "right", id = "mypanel", effect = "reveal"),
     
     
@@ -117,6 +119,7 @@ server <- function(input, output, session) {
       shinyjs::click(id = "selectTZ")
       #shinyjs::show("selectTZ")
   })
+  
   # emulate click on current items list
   observeEvent(input$removeItem, ignoreInit = TRUE, {
       shinyjs::click(id = "selectTZcurrent")
@@ -127,13 +130,14 @@ server <- function(input, output, session) {
     updateF7Panel(id = "mypanel")
   })
   
+  
   # main server
   #  track current list status
   currList <- c("Berlin, DE", "New York, US", "Tokyo, JP") # 
   
   # start with a list of 3 time zones, otherwise strange things happen with the smartselect input
   observe({
-    lapply(currList, insertListItem, data = cities, degrees = input$degrees, clientoffset = input$client_offset)
+    lapply(currList, insertListItem, data = cities, degrees = input$degrees, timeformat = 24, clientoffset = input$client_offset)
   })
   
   # insertUI when selected
@@ -142,6 +146,7 @@ server <- function(input, output, session) {
       
       insertListItem(myselection, data = cities, 
                      degrees = input$degrees, 
+                     timeformat = 24,
                      clientoffset = input$client_offset)
       
       if(myselection == "Abu Dhabi, AE" && input$client_timezone == "Asia/Dubai") { # show only there...
@@ -186,6 +191,14 @@ server <- function(input, output, session) {
   # reload page on reset
   observeEvent(input$reset, {
     shinyjs::refresh()
+  })
+  
+  # about
+  observeEvent(input$about, {
+    f7Toast("Data source: https://openweathermap.org/ <br> 
+            Source code: https://github.com/angelovangel/",
+            position = "center", closeTimeout = NULL,
+            closeButton = TRUE)
   })
   
   # really?
