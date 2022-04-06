@@ -6,6 +6,7 @@ library(stringr)
 library(lubridate)
 library(sparkline)
 library(htmltools)
+library(scales)
 
 
 api_key <- Sys.getenv("api_key")
@@ -36,12 +37,22 @@ get_weather_icon <- function(iconcode) {
 }
 
 # define style for fonts
-mystyle <- function(fontsize, align = "left") {
+mystyle <- function(fontsize, align = "left", color = "LightGrey") {
   paste0("font-family: 'Helvetica Neue Ultra Thin', 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial; font-size:", 
-         fontsize, "px; text-align: ", align, ";"
+         fontsize, "px; text-align: ", align, "; color: ", color, ";" 
   )
 }
 
+# pass temp in K as argument, return hex
+my_temp_color <- function(temp) {
+  # set scale 
+  # color ramp used for temp gradient
+  myramp <- scales::colour_ramp(c("blue", "cyan", "green", "yellow", "red"), na.color = "#D5D8DC")
+  scaled_temp <- scales::rescale( temp, from = c(223.15, 323.15), to = c(0,1) ) # -50 to +50 C
+  myramp(scaled_temp)
+}
+
+  
 insertListItem <- function(selection, data, degrees = c("°C", "°F"), clientoffset) {
   
   # call once
@@ -57,21 +68,20 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), clientoff
   iconurl <- get_weather_icon(weather$icon)
   
                  
-  #forecast <- get_forecast(cityid, timestamps = 18)
   if(degrees == "°C") { 
       temperature <- sprintf("%+3.0f", weather$temp - 273.15)
-      weather$daily_tempday <- formatC(weather$daily_tempday - 273.15, format = "f", digits = 1) 
-      weather$daily_tempmin <- sprintf("%+03.0f", weather$daily_tempmin - 273.15) 
-      weather$daily_tempmax <- sprintf("%+03.0f", weather$daily_tempmax - 273.15) 
-      weather$forecast_tempmin <- sprintf("%+3.0f", weather$forecast_tempmin - 273.15)
-      weather$forecast_tempmax <- sprintf("%+3.0f", weather$forecast_tempmax - 273.15)
+      daily_tempday <- formatC(weather$daily_tempday - 273.15, format = "f", digits = 1) 
+      daily_tempmin <- sprintf("%+03.0f", weather$daily_tempmin - 273.15) 
+      daily_tempmax <- sprintf("%+03.0f", weather$daily_tempmax - 273.15) 
+      forecast_tempmin <- sprintf("%+3.0f", weather$forecast_tempmin - 273.15)
+      forecast_tempmax <- sprintf("%+3.0f", weather$forecast_tempmax - 273.15)
     } else { 
       temperature <- round((weather$temp * 9/5) - 459.67, 0)
-      weather$daily_tempday <- round((weather$daily_tempday * 9/5) - 459.67, 0)
-      weather$daily_tempmin <- round((weather$daily_tempmin * 9/5) - 459.67, 0)
-      weather$daily_tempmax <- round((weather$daily_tempmax * 9/5) - 459.67, 0)
-      weather$forecast_tempmin <- round((weather$forecast_tempmin * 9/5) - 459.67, 0)
-      weather$forecast_tempmax <- round((weather$forecast_tempmax * 9/5) - 459.67, 0)
+      daily_tempday <- round((weather$daily_tempday * 9/5) - 459.67, 0)
+      daily_tempmin <- round((weather$daily_tempmin * 9/5) - 459.67, 0)
+      daily_tempmax <- round((weather$daily_tempmax * 9/5) - 459.67, 0)
+      forecast_tempmin <- round((weather$forecast_tempmin * 9/5) - 459.67, 0)
+      forecast_tempmax <- round((weather$forecast_tempmax * 9/5) - 459.67, 0)
     }
   
   mysunrise <- format.POSIXct(anytime(weather$sunrise + weather$tz_offset, asUTC = T), format = "%H:%M")
@@ -87,9 +97,9 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), clientoff
     day_there <- day( lubridate::now(tzone = "UTC") + weather$tz_offset )
     day_here <- day( lubridate::now(tzone = "UTC") + (-clientoffset*60) )
     myday <- case_when(
-      day_here - day_there == 0 ~ "today",
-      day_here - day_there > 0 ~ "yesterday",
-      day_here - day_there < 0 ~ "tomorrow"
+      day_here - day_there == 0 ~ "Today",
+      day_here - day_there > 0 ~ "Yesterday",
+      day_here - day_there < 0 ~ "Tomorrow"
     )
     paste0(myday, ", ", sprintf("%+.0f", myoffset), " hours" ) 
   })
@@ -117,9 +127,9 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), clientoff
     selector = "#mylist", where = "beforeEnd",
     ui = tags$div( id = paste0("item_", cityid), # use cityid as tag.. should be ok
               f7Swipeout(
-                  f7ListItem(tags$div(style = mystyle(fontsize = 17, align = "right"), 
+                  f7ListItem(tags$div(style = mystyle(fontsize = 16, align = "right", color = my_temp_color(weather$temp) ), 
                                       paste0(temperature, "°"), 
-                                      tags$br(weather$description)
+                                      tags$div(style = mystyle(fontsize = 16), weather$description)
                                       ), 
                              href = "#", # this is used here just to add the class needed to make it look like a clickable link
                              #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
@@ -133,7 +143,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), clientoff
               ),
                f7Popup(id = paste0("popup_", cityid),
                        title = tags$div(style = mystyle(fontsize = 15),
-                         paste0(selection, " 7 days forecast (", weather$forecast_tempmin, "°/",weather$forecast_tempmax,"°)")
+                         paste0(selection, " 7 days forecast (", forecast_tempmin, "°/", forecast_tempmax,"°)")
                          ), 
                        swipeToClose = T, fullsize = T,
                        f7List(
@@ -141,22 +151,22 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), clientoff
                            iconpath <- get_weather_icon( weather$daily_icon[j] )
                            
                            f7ListItem(
-                             tags$b(style = "font-family: 'Roboto Mono', monospace;", paste0( weather$daily_tempmin[j], "°") ), # monospace for temp to avoid shifting boxplot
+                             tags$b(style = "font-family: 'Roboto Mono', monospace;", paste0( daily_tempmin[j], "°") ), # monospace for temp to avoid shifting boxplot
                              #htmltools::as.tags(sp),
                              # try boxplots -> low_whisker, q1, median, q3, high_whisker, ..showOutliers = FALSE
-                             sparkline(c(weather$forecast_tempmin, 
-                                              weather$daily_tempmin[j], 
-                                              weather$daily_tempday[j], 
-                                              weather$daily_tempmax[j], 
-                                              weather$forecast_tempmax), 
+                             sparkline(c(forecast_tempmin, 
+                                         daily_tempmin[j], 
+                                         daily_tempday[j], 
+                                         daily_tempmax[j], 
+                                         forecast_tempmax), 
                                        type = "box", raw = TRUE, showOutliers = FALSE,
-                                       lineColor = "LightGrey", 
+                                       lineColor = "Grey", 
                                        lineWidth = 3,
                                        medianColor = "LightGrey",
                                        boxLineColor = "LightGrey", 
-                                       boxFillColor = "LightGrey", 
+                                       boxFillColor = my_temp_color( weather$daily_tempmax[j] ), 
                                        whiskerColor = "LightGrey"),
-                             tags$b( style = "font-family: monospace;", paste0( weather$daily_tempmax[j], "°" ) ),
+                             tags$b( style = "font-family: monospace;", paste0( daily_tempmax[j], "°" ) ),
                         
                              title = tags$div(style = mystyle(fontsize = 22),
                                             format.POSIXct(anytime(weather$daily_time[j] + weather$tz_offset, asUTC = T), 
