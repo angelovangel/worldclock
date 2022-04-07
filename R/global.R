@@ -71,7 +71,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
   
   chanceOfRain <- case_when(
     weather$daily_pop == 0 ~ "",
-    weather$daily_pop > 0 ~ paste0(", ", "☂" ,weather$daily_pop * 100, "%"),
+    weather$daily_pop > 0 ~ paste0(", ", "\U2602" ,weather$daily_pop * 100, "%"),
     TRUE ~ ""
   )
   
