@@ -67,6 +67,16 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
   weather <- get_forecast_onecall(lat, lon, apikey = api_key) # make reactive to invalidate?
   iconurl <- get_weather_icon(weather$icon)
   
+  # chanceOfRain is a vector of length 8, this returns pop for days where there is "Rain" in the weather$daily_main
+  
+  chanceOfRain <- case_when(
+    weather$daily_pop == 0 ~ "",
+    weather$daily_pop > 0 ~ paste0(", ", "☂" ,weather$daily_pop * 100, "%"),
+    TRUE ~ ""
+  )
+  
+    
+  
                  
   if(degrees == "°C") { 
       temperature <- sprintf("%+3.0f", weather$temp - 273.15)
@@ -132,13 +142,13 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
               f7Swipeout(
                   f7ListItem(tags$div(style = mystyle(fontsize = 16, align = "right", color = my_temp_color(weather$temp) ), 
                                       paste0(temperature, "°"), 
-                                      tags$div(style = mystyle(fontsize = 16), weather$description)
+                                      tags$div(style = mystyle(fontsize = 15), paste0(weather$description, chanceOfRain[1])), # today
                                       ), 
                              href = "#", # this is used here just to add the class needed to make it look like a clickable link
                              #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
                              #right = selection,  
-                             media = apputils::icon(list(src = iconurl, width = "40px"), lib = "local"), 
-                             title = tags$div( style = mystyle(fontsize = 30), mytime), 
+                             media = apputils::icon(list(src = iconurl, width = "40px"), lib = "local"),
+                             title = tags$div( style = mystyle(fontsize = 30, color = "white"), mytime), 
                              header = tags$div(style = mystyle(fontsize = 16), selection), 
                              footer = tags$div(style = mystyle(fontsize = 13), listItemOffset)
                              )
@@ -177,7 +187,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
                                             ),
                              header = format.POSIXct(anytime(weather$daily_time[j] + weather$tz_offset, asUTC = T), 
                                                      format = "%e %b"),
-                             footer = tags$div(style = mystyle(fontsize = 13), weather$daily_main[j]),
+                             footer = tags$div(style = mystyle( fontsize = 13), paste0(weather$daily_main[j], chanceOfRain[j]) ),
                              media = apputils::icon(list(src = iconpath, width = "40px"), lib = "local"),
                              )
                          }) 
