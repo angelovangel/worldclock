@@ -142,7 +142,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
               f7Swipeout(
                   f7ListItem(tags$div(style = mystyle(fontsize = 16, align = "right", color = my_temp_color(weather$temp) ), 
                                       paste0(temperature, "°"), 
-                                      tags$div(style = mystyle(fontsize = 15), paste0(weather$description, chanceOfRain[1])), # today
+                                      tags$div(style = mystyle(fontsize = 15), weather$description), # today
                                       ), 
                              href = "#", # this is used here just to add the class needed to make it look like a clickable link
                              #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
