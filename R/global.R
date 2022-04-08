@@ -52,6 +52,13 @@ my_temp_color <- function(temp) {
   myramp(scaled_temp)
 }
 
+# pass hour and return hex color reflecting the time
+# my_hour_color <- function(hour) {
+#   dayramp <- scales::colour_ramp(c("#A8D0F0", "#F2F3F4", "#E0A5A6"), na.color = "LightGrey")
+#   scaled_hour <- scales::rescale(hour, from = c(6, 20), to = c(0, 1))
+#   ifelse(scaled_hour < 0 | scaled_hour > 1, "LightGrey", dayramp(scaled_hour) )
+# }
+  
   
 insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeformat = c(12, 24), clientoffset) {
   
@@ -71,7 +78,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
   
   chanceOfRain <- case_when(
     weather$daily_pop == 0 ~ "",
-    weather$daily_pop > 0 ~ paste0(", ", "\U2602" ,weather$daily_pop * 100, "%"),
+    weather$daily_pop > 0 ~ paste0(", ", "\U1F327" ," ", weather$daily_pop * 100, "%"),
     TRUE ~ ""
   )
   
@@ -121,6 +128,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
     
     #time to show is:
     time <- lubridate::now(tzone = "UTC") + weather$tz_offset # in seconds
+    #print(time);
     #zoned_time <- clock::zoned_time_now(tz)
     ifelse(timeformat == 24,
     format.POSIXct(lubridate::as_datetime(time), format = "%H:%M"),
@@ -148,7 +156,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
                              #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
                              #right = selection,  
                              media = apputils::icon(list(src = iconurl, width = "40px"), lib = "local"),
-                             title = tags$div( style = mystyle(fontsize = 30, color = "white"), mytime), 
+                             title = tags$div( style = mystyle(fontsize = 30, color = "white"), mytime ), 
                              header = tags$div(style = mystyle(fontsize = 16), selection), 
                              footer = tags$div(style = mystyle(fontsize = 13), listItemOffset)
                              )
@@ -179,9 +187,9 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
                                        boxLineColor = "LightGrey", 
                                        boxFillColor = my_temp_color( weather$daily_tempday[j] ), 
                                        whiskerColor = "LightGrey"),
-                             tags$b( style = "font-family: monospace;", paste0( daily_tempmax[j], "°" ) ),
+                             tags$b( style = "font-family: 'Roboto Mono', monospace;", paste0( daily_tempmax[j], "°" ) ),
                         
-                             title = tags$div(style = mystyle(fontsize = 22),
+                             title = tags$div(style = mystyle( fontsize = 22, color = "white" ),
                                             format.POSIXct(anytime(weather$daily_time[j] + weather$tz_offset, asUTC = T), 
                                                            format = "%a")
                                             ),
