@@ -37,9 +37,9 @@ get_weather_icon <- function(iconcode) {
 }
 
 # define style for fonts
-mystyle <- function(fontsize, align = "left", color = "LightGrey") {
+mystyle <- function(fontsize, align = "left", color = "LightGrey", fontweight = 250) {
   paste0("font-family: 'Helvetica Neue Ultra Thin', 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial; font-size:", 
-         fontsize, "px; text-align: ", align, "; color: ", color, ";" 
+         fontsize, "px; text-align: ", align, "; color: ", color, ";", "font-weight: ", fontweight, ";" 
   )
 }
 
@@ -157,7 +157,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
                              #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
                              #right = selection,  
                              media = apputils::icon(list(src = iconurl, width = "40px"), lib = "local"),
-                             title = tags$div( style = mystyle(fontsize = 30, color = "white"), mytime ), 
+                             title = tags$div( style = mystyle(fontsize = 38, color = "white", fontweight = 150), mytime ), 
                              header = tags$div(style = mystyle(fontsize = 16), selection), 
                              footer = tags$div(style = mystyle(fontsize = 13), listItemOffset)
                              )

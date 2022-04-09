@@ -45,14 +45,16 @@ ui <- f7Page(
                       rightPanel = T
                       ), 
     panels = f7Panel(title = "Settings",
-      f7Radio("degrees", "", choices = c("°C", "°F"), selected = "°C"),
       #f7Radio("timeformat", "", choices = c(12, 24), selected = 24),
       f7Segment(container = "row",
                 f7Button("appendItem", label = f7Icon("plus", color = "white") , color = "black", size = "large"),
                 f7Button("removeItem", label = f7Icon("minus", color = "white"), color = "black", size = "large")
-      ), 
-      f7Button("reset", label = tags$div("Reload", f7Icon("arrow_counterclockwise", color = "white")), color = "black", size = "large"),
-      f7Button("about", label = tags$div("About", f7Icon("app", color = "white")), color = "black", size = "large"),
+      ),
+      f7Segment(container = "row",
+      f7Button("reset", label = tags$div("Reset", f7Icon("arrow_counterclockwise", color = "white")), color = "black", size = "large"),
+      f7Button("about", label = tags$div("About", f7Icon("app", color = "white")), color = "black", size = "large")
+      ),
+      f7Radio("degrees", "", choices = c("°C", "°F"), selected = "°C"),
       side = "right", id = "mypanel", effect = "reveal"),
     
     
