@@ -77,8 +77,9 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
   # chanceOfRain is a vector of length 8, this returns pop for days where there is "Rain" in the weather$daily_main
   
   chanceOfRain <- case_when(
-    weather$daily_pop == 0 ~ "",
+    str_detect(weather$daily_main, "(S|s)now") ~ paste0(", ", "\U2744" ," ", weather$daily_pop * 100, "%"),
     weather$daily_pop > 0 ~ paste0(", ", "\U1F327" ," ", weather$daily_pop * 100, "%"),
+    weather$daily_pop == 0 ~ "",
     TRUE ~ ""
   )
   
