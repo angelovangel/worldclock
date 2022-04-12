@@ -7,6 +7,7 @@ library(shinyjs)
 library(stringr)
 library(shinyMobile)
 library(shiny.pwa)
+library(sever)
 
 source("R/global.R")
 source("R/get_forecast.R")
@@ -29,6 +30,8 @@ ui <- f7Page(
   # ),
   
   useShinyjs(),
+  useSever(),
+  
   pwa(domain = "http://165.22.73.243/worldclock/", 
       output = "www", 
       icon = "www/icons8-clock-500.png", 
@@ -95,8 +98,8 @@ ui <- f7Page(
 # Define server logic to show current time, update every second ----
 ########################### server ##########################
 server <- function(input, output, session) {
-  
-  session$allowReconnect(TRUE)
+  sever()
+  #session$allowReconnect(TRUE)
  
    # try to get client timezone
   observeEvent(input$client_timezone, {

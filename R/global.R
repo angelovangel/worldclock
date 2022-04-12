@@ -56,15 +56,15 @@ my_temp_color <- function(temp) {
 my_line_gradient <- function(tempmin, tempmax, forecastmin, forecastmax) {
   color1 <- my_temp_color(tempmin)
   color2 <- my_temp_color(tempmax)
-  # stop1 is the percentage fill on the left side. 
-  graphscale <- forecastmax - forecastmin
-  stop1 <- scales::rescale( tempmin, to = c(0, 100),from = c(forecastmin, forecastmax))
+  
+  # stop1 is the percentage fill on the left side
+  stop1 <- scales::rescale(tempmin, to = c(0, 100),from = c(forecastmin, forecastmax))
   stop2 <- scales::rescale(tempmax, to = c(0, 100), from = c(forecastmin, forecastmax))
   #print(stop1)
   
   # build the gradient with stops at tempmin and tempmax
   # https://css-tricks.com/css3-gradients/
-  paste0("height: 5px; width: 130px; border-radius: 5px; 
+  paste0("height: 5px; width: 130px; border-radius: 5px;
     background: linear-gradient(to right, 
         grey, grey ", stop1, "%, ", 
         color1, " ", stop1, "%, ", 
@@ -125,8 +125,8 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
       forecast_tempmax <- round((weather$forecast_tempmax * 9/5) - 459.67, 0)
     }
   
-  mysunrise <- format.POSIXct(anytime(weather$sunrise + weather$tz_offset, asUTC = T), format = "%H:%M")
-  mysunset <- format.POSIXct(anytime(weather$sunset + weather$tz_offset, asUTC = T), format = "%H:%M")
+  #mysunrise <- format.POSIXct(anytime(weather$sunrise + weather$tz_offset, asUTC = T), format = "%H:%M")
+  #mysunset <- format.POSIXct(anytime(weather$sunset + weather$tz_offset, asUTC = T), format = "%H:%M")
   
   # calculate location offset in hours relative to client (client offset to UTC in minutes given as param)
   listItemOffset <- renderText({
@@ -180,8 +180,8 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
                              #paste0(weather$temp, " ",weather$weather, " ↑", format.POSIXct(weather$sunrise, format = "%H:%M"), " ↓", format.POSIXct(weather$sunset, format = "%H:%M")) , 
                              #right = selection,  
                              media = apputils::icon(list(src = iconurl, width = "40px"), lib = "local"),
-                             title = tags$div( style = mystyle(fontsize = 38, color = "white", fontweight = 200), mytime ), 
-                             header = tags$div(style = mystyle(fontsize = 16), selection), 
+                             title = tags$div( style = mystyle(fontsize = 40, color = "white", fontweight = 200), mytime ), 
+                             header = tags$div(style = mystyle(fontsize = 16, fontweight = 350), selection), 
                              footer = tags$div(style = mystyle(fontsize = 13), listItemOffset)
                              )
                   #f7SwipeoutItem(id = paste0("swipe_", cityid), color = "pink", "Alert")
@@ -196,8 +196,8 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
                            iconpath <- get_weather_icon( weather$daily_icon[j] )
                            
                            f7ListItem(
-                             tags$b(style = mystyle(fontsize = 13), 
-                                    paste0( daily_tempmin[j], "° / ", daily_tempmax[j], "°") ), # monospace for temp to avoid shifting boxplot
+                             tags$div(style = mystyle(fontsize = 14, fontweight = 350), 
+                                    paste0( daily_tempmin[j], "° / ", daily_tempmax[j], "°") ),
                              #---------------------------
                              tags$div( style = my_line_gradient(weather$daily_tempmin[j], 
                                                                 weather$daily_tempmax[j], 

@@ -122,14 +122,6 @@
         "sys"
       ]
     },
-    "backports": {
-      "Package": "backports",
-      "Version": "1.4.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "c39fbec8a30d23e721980b8afb31984c",
-      "Requirements": []
-    },
     "base64enc": {
       "Package": "base64enc",
       "Version": "0.1-3",
@@ -179,16 +171,6 @@
       "Requirements": [
         "fastmap",
         "rlang"
-      ]
-    },
-    "checkmate": {
-      "Package": "checkmate",
-      "Version": "2.0.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "a667800d5f0350371bedeb8b8b950289",
-      "Requirements": [
-        "backports"
       ]
     },
     "cli": {
@@ -819,6 +801,23 @@
         "viridisLite"
       ]
     },
+    "sever": {
+      "Package": "sever",
+      "Version": "0.0.7.9000",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "sever",
+      "RemoteUsername": "JohnCoene",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "65cb714783cd2e83f0e52378866ef5382fe50f27",
+      "Hash": "c4b95ce2a578003c4186290bbc8b9124",
+      "Requirements": [
+        "cli",
+        "htmltools",
+        "shiny"
+      ]
+    },
     "shiny": {
       "Package": "shiny",
       "Version": "1.7.1",
@@ -895,19 +894,6 @@
       "Requirements": [
         "htmltools",
         "promises",
-        "shiny"
-      ]
-    },
-    "shinydisconnect": {
-      "Package": "shinydisconnect",
-      "Version": "0.1.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "0246e91be508acf9dd58c00db3dd765d",
-      "Requirements": [
-        "checkmate",
-        "glue",
-        "htmltools",
         "shiny"
       ]
     },
