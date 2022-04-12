@@ -39,6 +39,7 @@ ui <- f7Page(
   skin = "ios",
   title = "World Clock",
   f7SingleLayout(
+    #includeCSS("www/gradient.css"),
     navbar = f7Navbar(#subtitle = "Clock and weather",
                       title = tags$div(style = mystyle(fontsize = 18, fontweight = 400), "Clock and Weather"),
                       leftPanel = F, 

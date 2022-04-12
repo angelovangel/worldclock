@@ -47,9 +47,32 @@ mystyle <- function(fontsize, align = "left", color = "LightGrey", fontweight = 
 my_temp_color <- function(temp) {
   # set scale 
   # color ramp used for temp gradient
-  myramp <- scales::colour_ramp(c("blue", "cyan", "green", "yellow", "red"), na.color = "#D5D8DC")
+  myramp <- scales::colour_ramp(c("violet", "blue", "cyan", "green", "yellow", "orange","red"), na.color = "#D5D8DC")
   scaled_temp <- scales::rescale( temp, from = c(223.15, 323.15), to = c(0,1) ) # -50 to +50 C
   myramp(scaled_temp)
+}
+
+# generate style for a div, input temps, output style with colors
+my_line_gradient <- function(tempmin, tempmax, forecastmin, forecastmax) {
+  color1 <- my_temp_color(tempmin)
+  color2 <- my_temp_color(tempmax)
+  # stop1 is the percentage fill on the left side. 
+  graphscale <- forecastmax - forecastmin
+  stop1 <- scales::rescale( tempmin, to = c(0, 100),from = c(forecastmin, forecastmax))
+  stop2 <- scales::rescale(tempmax, to = c(0, 100), from = c(forecastmin, forecastmax))
+  #print(stop1)
+  
+  # build the gradient with stops at tempmin and tempmax
+  # https://css-tricks.com/css3-gradients/
+  paste0("height: 5px; width: 130px; border-radius: 5px; 
+    background: linear-gradient(to right, 
+        grey, grey ", stop1, "%, ", 
+        color1, " ", stop1, "%, ", 
+        
+        color2, " ", stop2, "%, ", 
+        "grey ", stop2, 
+        "%); background-size: 100% 100%; background-repeat: no-repeat;"
+        )
 }
 
 # pass hour and return hex color reflecting the time
@@ -173,23 +196,14 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
                            iconpath <- get_weather_icon( weather$daily_icon[j] )
                            
                            f7ListItem(
-                             tags$b(style = "font-family: 'Roboto Mono', monospace;", paste0( daily_tempmin[j], "°") ), # monospace for temp to avoid shifting boxplot
-                             #htmltools::as.tags(sp),
-                             # try boxplots -> low_whisker, q1, median, q3, high_whisker, ..showOutliers = FALSE
-                             sparkline(c(forecast_tempmin, 
-                                         daily_tempmin[j], 
-                                         daily_tempday[j], 
-                                         daily_tempmax[j], 
-                                         forecast_tempmax), 
-                                       type = "box", raw = TRUE, showOutliers = FALSE,
-                                       lineColor = "Grey", 
-                                       lineWidth = 3,
-                                       medianColor = "black",
-                                       boxLineColor = "LightGrey", 
-                                       boxFillColor = my_temp_color( weather$daily_tempday[j] ), 
-                                       whiskerColor = "LightGrey"),
-                             tags$b( style = "font-family: 'Roboto Mono', monospace;", paste0( daily_tempmax[j], "°" ) ),
-                        
+                             tags$b(style = mystyle(fontsize = 13), 
+                                    paste0( daily_tempmin[j], "° / ", daily_tempmax[j], "°") ), # monospace for temp to avoid shifting boxplot
+                             #---------------------------
+                             tags$div( style = my_line_gradient(weather$daily_tempmin[j], 
+                                                                weather$daily_tempmax[j], 
+                                                                weather$forecast_tempmin, 
+                                                                weather$forecast_tempmax)),
+                             #---------------------------
                              title = tags$div(style = mystyle( fontsize = 22, color = "white" ),
                                             format.POSIXct(anytime(weather$daily_time[j] + weather$tz_offset, asUTC = T), 
                                                            format = "%a")
