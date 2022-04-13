@@ -66,11 +66,11 @@ my_line_gradient <- function(tempmin, tempmax, forecastmin, forecastmax) {
   # https://css-tricks.com/css3-gradients/
   paste0("height: 5px; width: 130px; border-radius: 5px;
     background: linear-gradient(to right, 
-        grey, grey ", stop1, "%, ", 
+        black, black ", stop1, "%, ", 
         color1, " ", stop1, "%, ", 
         
         color2, " ", stop2, "%, ", 
-        "grey ", stop2, 
+        "black ", stop2, 
         "%); background-size: 100% 100%; background-repeat: no-repeat;"
         )
 }
@@ -196,8 +196,11 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
                            iconpath <- get_weather_icon( weather$daily_icon[j] )
                            
                            f7ListItem(
-                             tags$div(style = mystyle(fontsize = 14, fontweight = 350), 
-                                    paste0( daily_tempmin[j], "° / ", daily_tempmax[j], "°") ),
+                             tags$div(style = "margin: 0; width: 130px;",
+                                      paste0( daily_tempmin[j], "°"), 
+                             tags$span(style = "display: block; float: right; color: LightGrey", 
+                                      paste0(daily_tempmax[j], "°"))
+                             ), 
                              #---------------------------
                              tags$div( style = my_line_gradient(weather$daily_tempmin[j], 
                                                                 weather$daily_tempmax[j], 
