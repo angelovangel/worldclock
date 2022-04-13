@@ -22,12 +22,6 @@ secret_text <- Sys.getenv("secret_text")
 ########################### UI ##########################
 ui <- f7Page(
   options = list(dark = TRUE), # can we update server-side?
-  # shinydisconnect::disconnectMessage(
-  #   text = "Session timed out", refresh = "Refresh", size = 30, colour = "grey", 
-  #   background = "rgba(39, 55, 70, 0.9)", width = "full", top = "center", 
-  #   overlayColour = "#999", overlayOpacity = 1, 
-  #   css = "padding: 15px !important; box-shadow: none !important;"
-  # ),
   
   useShinyjs(),
   useSever(),

@@ -111,6 +111,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
                  
   if(degrees == "°C") { 
       temperature <- sprintf("%+3.0f", weather$temp - 273.15)
+      feels_like <- sprintf("%+03.0f", weather$feels_like - 273.15)
       daily_tempday <- formatC(weather$daily_tempday - 273.15, format = "f", digits = 1) 
       daily_tempmin <- sprintf("%+03.0f", weather$daily_tempmin - 273.15) 
       daily_tempmax <- sprintf("%+03.0f", weather$daily_tempmax - 273.15) 
@@ -118,6 +119,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
       forecast_tempmax <- sprintf("%+3.0f", weather$forecast_tempmax - 273.15)
     } else { 
       temperature <- round((weather$temp * 9/5) - 459.67, 0)
+      feels_like <- round((weather$feels_like * 9/5) - 459.67, 0)
       daily_tempday <- round((weather$daily_tempday * 9/5) - 459.67, 0)
       daily_tempmin <- round((weather$daily_tempmin * 9/5) - 459.67, 0)
       daily_tempmax <- round((weather$daily_tempmax * 9/5) - 459.67, 0)
@@ -172,8 +174,10 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
     selector = "#mylist", where = "beforeEnd",
     ui = tags$div( id = paste0("item_", cityid), # use cityid as tag.. should be ok
               f7Swipeout(
-                  f7ListItem(tags$div(style = mystyle(fontsize = 16, align = "right", color = my_temp_color(weather$temp) ), 
+                  f7ListItem(tags$div(style = mystyle(fontsize = 18, fontweight = 350, align = "right", color = my_temp_color(weather$temp) ), 
                                       paste0(temperature, "°"), 
+                                      # tags$span(style = mystyle(fontsize = 12, color = "LightGrey"), 
+                                      #           paste0("feels like ", feels_like, "°")),
                                       tags$div(style = mystyle(fontsize = 15), weather$description), # today
                                       ), 
                              href = "#", # this is used here just to add the class needed to make it look like a clickable link
@@ -192,7 +196,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
                          ), 
                        swipeToClose = T, fullsize = T,
                        f7List(
-                         lapply(seq(weather$daily_main), function(j){ # these are the forecast points
+                         lapply(seq(weather$daily_main), function(j) { # these are the forecast points
                            iconpath <- get_weather_icon( weather$daily_icon[j] )
                            
                            f7ListItem(
@@ -205,7 +209,8 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
                              tags$div( style = my_line_gradient(weather$daily_tempmin[j], 
                                                                 weather$daily_tempmax[j], 
                                                                 weather$forecast_tempmin, 
-                                                                weather$forecast_tempmax)),
+                                                                weather$forecast_tempmax)
+                                       ),
                              #---------------------------
                              title = tags$div(style = mystyle( fontsize = 22, color = "white" ),
                                             format.POSIXct(anytime(weather$daily_time[j] + weather$tz_offset, asUTC = T), 
