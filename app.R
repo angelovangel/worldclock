@@ -19,6 +19,35 @@ cities <- readRDS("data/cities500k.rds")
 
 secret_text <- Sys.getenv("secret_text")
 
+lang_choices <- c(
+  "Arabic" = "ar",
+  "Bulgarian" = "bg",
+  "Czech" = "cz",
+  "Danish" = "da",
+  "German" = "de",
+  "Greek" = "el",
+  "English" = "en",
+  "Persian (Farsi)" = "fa",
+  "Finnish" = "fi",
+  "French" = "fr",
+  "Hindi" = "hi",
+  "Croatian" = "hr",
+  "Hungarian" = "hu",
+  "Italian" = "it",
+  "Japanese" = "ja",
+  "Korean" = "kr",
+  "Norwegian" = "no",
+  "Dutch" = "nl",
+  "Polish" = "pl",
+  "Portuguese" = "pt",
+  "Romanian" = "ro",
+  "Russian" = "ru",
+  "Swedish" = "se",
+  "Spanish" = "es",
+  "Turkish" = "tr",
+  "Chinese" = "zh_cn"
+)
+
 ########################### UI ##########################
 ui <- f7Page(
   options = list(dark = TRUE), # can we update server-side?
@@ -53,6 +82,7 @@ ui <- f7Page(
       f7Button("about", label = tags$div(style = mystyle(fontsize = 14, fontweight = 400), "About", f7Icon("app", color = "white")), color = "black", size = "large")
       ),
       f7Radio("degrees", "", choices = c("°C", "°F"), selected = "°C"),
+      f7Select("language", "Language", choices = lang_choices, selected = "en"),
       side = "right", id = "mypanel", effect = "reveal"),
     
     
@@ -130,6 +160,11 @@ server <- function(input, output, session) {
     updateF7Panel(id = "mypanel")
   })
   
+  # close panel on language select
+  observeEvent(input$language, ignoreInit = TRUE, {
+    updateF7Panel(id = "mypanel")
+  })
+  
   
   # main server
   #  track current list status
@@ -137,7 +172,7 @@ server <- function(input, output, session) {
   
   # start with a list of 3 time zones, otherwise strange things happen with the smartselect input
   observe({
-    lapply(currList, insertListItem, data = cities, degrees = input$degrees, timeformat = 24, clientoffset = input$client_offset)
+    lapply(currList, insertListItem, data = cities, degrees = input$degrees, timeformat = 24, clientoffset = input$client_offset, language = input$language)
   })
   
   # insertUI when selected

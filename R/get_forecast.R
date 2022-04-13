@@ -25,7 +25,7 @@ get_forecast <- function(id, timestamps = 8) {
 }
 
 # https://openweathermap.org/api/one-call-api
-get_forecast_onecall <- function(lat, lon, exclude = "minutely,hourly", apikey) {
+get_forecast_onecall <- function(lat, lon, exclude = "minutely,hourly", apikey, language) {
   require(httr)
   require(jsonlite)
   require(dplyr)
@@ -34,7 +34,11 @@ get_forecast_onecall <- function(lat, lon, exclude = "minutely,hourly", apikey) 
   lon <- round(lon, 2)
   
   api_key <- Sys.getenv("api_key")
-  call <- paste0("https://api.openweathermap.org/data/2.5/onecall?lat=", lat, "&lon=", lon, "&exclude=", exclude, "&appid=", api_key)
+  call <- paste0("https://api.openweathermap.org/data/2.5/onecall?lat=", lat, 
+                 "&lon=", lon, 
+                 "&exclude=", exclude, 
+                 "&appid=", api_key, 
+                 "&lang=", language)
   res <- httr::GET(call)
   data <- jsonlite::fromJSON(rawToChar(res$content))
   
@@ -62,6 +66,7 @@ get_forecast_onecall <- function(lat, lon, exclude = "minutely,hourly", apikey) 
       daily_tempday = data$daily$temp$day,
       daily_pop = data$daily$pop,
       daily_main = bind_rows(data$daily$weather)[["main"]],
+      daily_description = bind_rows(data$daily$weather)[["description"]],
       daily_icon = bind_rows(data$daily$weather)[["icon"]]
     )
   )

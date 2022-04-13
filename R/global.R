@@ -64,7 +64,7 @@ my_line_gradient <- function(tempmin, tempmax, forecastmin, forecastmax) {
   
   # build the gradient with stops at tempmin and tempmax
   # https://css-tricks.com/css3-gradients/
-  paste0("height: 5px; width: 130px; border-radius: 5px;
+  paste0("height: 5px; width: 120px; border-radius: 5px;
     background: linear-gradient(to right, 
         black, black ", stop1, "%, ", 
         color1, " ", stop1, "%, ", 
@@ -83,7 +83,7 @@ my_line_gradient <- function(tempmin, tempmax, forecastmin, forecastmax) {
 # }
   
   
-insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeformat = c(12, 24), clientoffset) {
+insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeformat = c(12, 24), clientoffset, language = "en") {
   
   # call once
   # selection is "Berlin, DE", from there we get the lat lon and make one API call
@@ -94,7 +94,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
   lon <- hit$lon
   cityid <- hit$id
   
-  weather <- get_forecast_onecall(lat, lon, apikey = api_key) # make reactive to invalidate?
+  weather <- get_forecast_onecall(lat, lon, apikey = api_key, language = language) # make reactive to invalidate?
   iconurl <- get_weather_icon(weather$icon)
   
   # chanceOfRain is a vector of length 8, this returns pop for days where there is "Rain" in the weather$daily_main
@@ -200,7 +200,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
                            iconpath <- get_weather_icon( weather$daily_icon[j] )
                            
                            f7ListItem(
-                             tags$div(style = "margin: 0; width: 130px;",
+                             tags$div(style = "margin: 0; width: 120px;",
                                       paste0( daily_tempmin[j], "°"), 
                              tags$span(style = "display: block; float: right; color: LightGrey", 
                                       paste0(daily_tempmax[j], "°"))
@@ -218,7 +218,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
                                             ),
                              header = format.POSIXct(anytime(weather$daily_time[j] + weather$tz_offset, asUTC = T), 
                                                      format = "%e %b"),
-                             footer = tags$div(style = mystyle( fontsize = 13), paste0(weather$daily_main[j], chanceOfRain[j]) ),
+                             footer = tags$div(style = mystyle( fontsize = 13), paste0(weather$daily_description[j], chanceOfRain[j]) ),
                              media = apputils::icon(list(src = iconpath, width = "40px"), lib = "local"),
                              )
                          }) 
