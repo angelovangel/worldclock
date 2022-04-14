@@ -199,19 +199,19 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
                        
                        # Detailed weather for selection
                        #--------------
-                       f7Card("Bla"),
+                       #f7Card("Bla"),
                        
                        # 7 days forecast
                        #------------
-                       tags$h3(style = mystyle(fontsize = 18), "7 days forecast"),
+                       #tags$h3(style = mystyle(fontsize = 18), "7 days forecast"),
                        f7List(
                          lapply(seq(weather$daily_main), function(j) { # these are the forecast points
                            iconpath <- get_weather_icon( weather$daily_icon[j] )
                            
                            f7ListItem(
-                             tags$div(style = "margin: 0; width: 120px;",
+                             tags$div(style = "margin: 0; width: 120px; font-size: 13px",
                                       paste0( daily_tempmin[j], "°"), 
-                             tags$span(style = "display: block; float: right; color: LightGrey", 
+                             tags$span(style = "display: block; float: right; color: LightGrey; font-size: 13px", 
                                       paste0(daily_tempmax[j], "°"))
                              ), 
                              #---------------------------
@@ -227,7 +227,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
                                             ),
                              header = format.POSIXct(anytime(weather$daily_time[j] + weather$tz_offset, asUTC = T), 
                                                      format = "%e %b"),
-                             footer = tags$div(style = mystyle( fontsize = 13), paste0(weather$daily_main[j], chanceOfRain[j]) ),
+                             footer = tags$div(style = mystyle( fontsize = 13), paste0(weather$daily_description[j], chanceOfRain[j]) ),
                              media = apputils::icon(list(src = iconpath, width = "40px"), lib = "local"),
                              )
                          }) 
