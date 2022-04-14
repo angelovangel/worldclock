@@ -47,7 +47,16 @@ mystyle <- function(fontsize, align = "left", color = "LightGrey", fontweight = 
 my_temp_color <- function(temp) {
   # set scale 
   # color ramp used for temp gradient
-  myramp <- scales::colour_ramp(c("violet", "blue", "cyan", "green", "yellow", "orange","red"), na.color = "#D5D8DC")
+  myramp <- scales::colour_ramp(c("violet", 
+                                  "blue", 
+                                  "sky blue",
+                                  "cyan", 
+                                  "green", 
+                                  "yellow", 
+                                  "orange",
+                                  "red", 
+                                  "dark red"), 
+                                na.color = "#D5D8DC")
   scaled_temp <- scales::rescale( temp, from = c(223.15, 323.15), to = c(0,1) ) # -50 to +50 C
   myramp(scaled_temp)
 }
@@ -75,14 +84,6 @@ my_line_gradient <- function(tempmin, tempmax, forecastmin, forecastmax) {
         )
 }
 
-# pass hour and return hex color reflecting the time
-# my_hour_color <- function(hour) {
-#   dayramp <- scales::colour_ramp(c("#A8D0F0", "#F2F3F4", "#E0A5A6"), na.color = "LightGrey")
-#   scaled_hour <- scales::rescale(hour, from = c(6, 20), to = c(0, 1))
-#   ifelse(scaled_hour < 0 | scaled_hour > 1, "LightGrey", dayramp(scaled_hour) )
-# }
-  
-  
 insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeformat = c(12, 24), clientoffset, language = "en") {
   
   # call once
@@ -195,6 +196,14 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
                          paste0(selection, " 7 days forecast (", forecast_tempmin, "°/", forecast_tempmax,"°)")
                          ), 
                        swipeToClose = T, fullsize = T,
+                       
+                       # Detailed weather for selection
+                       #--------------
+                       f7Card("Bla"),
+                       
+                       # 7 days forecast
+                       #------------
+                       tags$h3(style = mystyle(fontsize = 18), "7 days forecast"),
                        f7List(
                          lapply(seq(weather$daily_main), function(j) { # these are the forecast points
                            iconpath <- get_weather_icon( weather$daily_icon[j] )
@@ -218,7 +227,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
                                             ),
                              header = format.POSIXct(anytime(weather$daily_time[j] + weather$tz_offset, asUTC = T), 
                                                      format = "%e %b"),
-                             footer = tags$div(style = mystyle( fontsize = 13), paste0(weather$daily_description[j], chanceOfRain[j]) ),
+                             footer = tags$div(style = mystyle( fontsize = 13), paste0(weather$daily_main[j], chanceOfRain[j]) ),
                              media = apputils::icon(list(src = iconpath, width = "40px"), lib = "local"),
                              )
                          }) 
