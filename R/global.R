@@ -102,7 +102,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
   
   chanceOfRain <- case_when(
     str_detect(weather$daily_main, "(S|s)now") ~ paste0(", ", "\U2744" ," ", weather$daily_pop * 100, "%"),
-    weather$daily_pop > 0 ~ paste0(", ", "\U1F327" ," ", weather$daily_pop * 100, "%"),
+    weather$daily_pop > 0 ~ paste0(" ", "\U1F327" ," ", weather$daily_pop * 100, "%"),
     weather$daily_pop == 0 ~ "",
     TRUE ~ ""
   )
@@ -177,8 +177,8 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
               f7Swipeout(
                   f7ListItem(tags$div(style = mystyle(fontsize = 18, fontweight = 350, align = "right", color = my_temp_color(weather$temp) ), 
                                       paste0(temperature, "°"), 
-                                      # tags$span(style = mystyle(fontsize = 12, color = "LightGrey"), 
-                                      #           paste0("feels like ", feels_like, "°")),
+                                       tags$span(style = mystyle(fontsize = 12, color = "LightGrey"), 
+                                                 chanceOfRain[1]),
                                       tags$div(style = mystyle(fontsize = 15), weather$description), # today
                                       ), 
                              href = "#", # this is used here just to add the class needed to make it look like a clickable link
