@@ -109,9 +109,7 @@ ui <- f7Page(
     
     
     
-    f7List(id = "mylist"
-           
-    ),
+    f7List(id = "mylist"),
     
     #f7Popup(id = "mypopup", "to be updated"),
     

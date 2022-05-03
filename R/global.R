@@ -43,32 +43,33 @@ mystyle <- function(fontsize, align = "left", color = "LightGrey", fontweight = 
   )
 }
 
+my_rainbow <- c("violet", 
+                "blue", 
+                "sky blue",
+                "cyan", 
+                "green", 
+                "yellow", 
+                "orange",
+                "red", 
+                "dark red")
+
 # pass temp in K as argument, return hex
 my_temp_color <- function(temp) {
   # set scale 
   # color ramp used for temp gradient
-  myramp <- scales::colour_ramp(c("violet", 
-                                  "blue", 
-                                  "sky blue",
-                                  "cyan", 
-                                  "green", 
-                                  "yellow", 
-                                  "orange",
-                                  "red", 
-                                  "dark red"), 
-                                na.color = "#D5D8DC")
+  myramp <- scales::colour_ramp(my_rainbow, na.color = "#D5D8DC")
   scaled_temp <- scales::rescale( temp, from = c(223.15, 323.15), to = c(0,1) ) # -50 to +50 C
   myramp(scaled_temp)
 }
 
 my_uvi_color <- function(uvi) {
   # color ramp used for index, https://en.wikipedia.org/wiki/Ultraviolet_index
-  myramp <- scales::colour_ramp(c("green", "yellow", "orange", "red", "violet"), na.color = "#D5D8DC")
+  myramp <- scales::colour_ramp(c("green", "yellow", "red", "dark red"), na.color = "#D5D8DC")
   scaled_uvi <- scales::rescale(uvi, from = c(0, 12), to = c(0, 1))
   myramp(scaled_uvi)
 }
 
-# generate style for a div, input temps, output style with colors
+# generate gradients for a div, input temps, output style with colors
 my_temp_gradient <- function(tempmin, tempmax, forecastmin, forecastmax) {
   color1 <- my_temp_color(tempmin)
   color2 <- my_temp_color(tempmax)
@@ -89,6 +90,21 @@ my_temp_gradient <- function(tempmin, tempmax, forecastmin, forecastmax) {
         "black ", stop2, 
         "%); background-size: 100% 100%; background-repeat: no-repeat;"
         )
+}
+
+my_uvi_gradient <- function(uvi_current) {
+  
+  # rescaled uvi current
+   uvi_current_percent <- scales::rescale(uvi_current, to = c(0, 100), from = c(0, 12))
+   mycolors <- my_uvi_color(seq(0, uvi_current))
+  
+  # build the gradient with a circle at uvi_current
+  # https://css-tricks.com/css3-gradients/
+  paste0("height: 5px; width: 100px; border-radius: 5px; background: linear-gradient(to right, ",
+         str_flatten(mycolors, ", "), " ", uvi_current_percent, "%", ", black ", uvi_current_percent, "%", ");",
+         #"blue, green, yellow, orange, red);",
+         "background-size: 100% 100%; background-repeat: no-repeat;"
+  )
 }
 
 insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeformat = c(12, 24), clientoffset, language = "en") {
@@ -214,6 +230,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
                            # temp
                            tags$div(style = mystyle(fontsize = 13), 
                                     paste0(daily_tempmin[1], "°", "/", daily_tempmax[1], "°")),
+                           
                            title = tags$div(style = mystyle(fontsize = 22, color = my_temp_color(weather$temp)),
                                             paste0(temperature, "°")
                                             ),
@@ -233,6 +250,10 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
                          ),
                          # UV index
                          f7ListItem(
+                           tags$div(style = "margin: 0; width: 100px; font-size: 13px",
+                                    paste0( "bla" )),
+                           tags$div(style = my_uvi_gradient(uvi_current = weather$uvi)),
+                           
                            title = tags$div(style = mystyle(fontsize = 22, color = my_uvi_color(weather$uvi)),
                                             paste0(weather$uvi)
                                                      ), 
