@@ -6,7 +6,7 @@ get_forecast <- function(id, timestamps = 8) {
   require(dplyr)
   
   api_key <- Sys.getenv("api_key")
-  call <- paste0("http://api.openweathermap.org/data/2.5/forecast?id=", id, "&cnt=", timestamps, "&appid=", api_key)
+  call <- paste0("http://api.openweathermap.org/data/2.5/forecast/daily?id=", id, "&cnt=", timestamps, "&appid=", api_key)
   res <- httr::GET(call)
   data <- jsonlite::fromJSON(rawToChar(res$content))
   
@@ -34,7 +34,7 @@ get_forecast_onecall <- function(lat, lon, exclude = "minutely,hourly", apikey, 
   lon <- round(lon, 2)
   
   api_key <- Sys.getenv("api_key")
-  call <- paste0("https://api.openweathermap.org/data/2.5/onecall?lat=", lat, 
+  call <- paste0("https://api.openweathermap.org/data/2.5/weather?lat=", lat, 
                  "&lon=", lon, 
                  "&exclude=", exclude, 
                  "&appid=", api_key, 
