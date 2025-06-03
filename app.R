@@ -1,7 +1,7 @@
 library(shiny)
 #library(clock)
 library(dplyr)
-library(apputils)
+#library(apputils)
 library(shinyjs)
 #library(shinydisconnect)
 library(stringr)
@@ -50,119 +50,127 @@ lang_choices <- c(
 
 ########################### UI ##########################
 ui <- f7Page(
-  options = list(dark = TRUE), # can we update server-side?
-  
-  useShinyjs(),
-  useSever(),
-  
-  pwa(domain = "http://165.22.73.243/worldclock/", 
-      output = "www", 
-      icon = "www/icons8-clock-500.png", 
-      title = "Clock and Weather"),
-  
-  tags$script(src = "getClientTimezone.js"),
-  
-  skin = "ios",
   title = "World Clock",
+  options = list(
+    dark = TRUE,
+    theme = "ios"
+  ), # can we update server-side?
+  
+  allowPWA = T,
+  useShinyjs(),
+  tags$script(src = "getClientTimezone.js"),
+  #useSever(),
+  
+  # pwa(domain = "http://165.22.73.243/worldclock/", 
+  #     output = "www", 
+  #     icon = "www/icons8-clock-500.png", 
+  #     title = "Clock and Weather")
+  #skin = "ios",
   f7SingleLayout(
     #includeCSS("www/gradient.css"),
-    navbar = f7Navbar(#subtitle = "Clock and weather",
-                      title = tags$div(style = mystyle(fontsize = 18, fontweight = 400), "Clock and Weather"),
-                      leftPanel = F, 
-                      rightPanel = T
-                      ), 
-    panels = f7Panel(title = tags$div(style = mystyle(fontsize = 18, fontweight = 400), "Settings"),
+    toolbar = NULL,
+    navbar = f7Navbar(
+      title = tags$div(style = mystyle(fontsize = 18, fontweight = 400), "Clock and Weather"),
+      leftPanel = F, 
+      rightPanel = T
+    ), 
+    panels = f7Panel(
+      side = "right", id = "mypanel", effect = "reveal",
+      title = tags$div(style = mystyle(fontsize = 18, fontweight = 400), "Settings"),
       #f7Radio("timeformat", "", choices = c(12, 24), selected = 24),
-      f7Segment(container = "row",
-                f7Button("appendItem", label = f7Icon("plus", color = "white") , color = "black", size = "large"),
-                f7Button("removeItem", label = f7Icon("minus", color = "white"), color = "black", size = "large")
+      f7Segment(
+        container = "row",
+        f7Button("appendItem", label = f7Icon("plus", color = "white") , color = "black", size = "large"),
+        f7Button("removeItem", label = f7Icon("minus", color = "white"), color = "black", size = "large")
       ),
-      f7Segment(container = "row",
-      f7Button("reset", label = tags$div(style = mystyle(fontsize = 14, fontweight = 400), "Reset", f7Icon("arrow_counterclockwise", color = "white")), color = "black", size = "large"),
-      f7Button("about", label = tags$div(style = mystyle(fontsize = 14, fontweight = 400), "About", f7Icon("app", color = "white")), color = "black", size = "large")
+      f7Segment(
+        container = "row",
+        f7Button("reset", label = tags$div(style = mystyle(fontsize = 14, fontweight = 400), "Reset", f7Icon("arrow_counterclockwise", color = "white")), color = "black", size = "large"),
+        f7Button("about", label = tags$div(style = mystyle(fontsize = 14, fontweight = 400), "About", f7Icon("app", color = "white")), color = "black", size = "large")
       ),
       f7Radio("degrees", "", choices = c("°C", "°F"), selected = "°C"),
       f7Select("language", "Language", choices = lang_choices, selected = "en"),
-      side = "right", id = "mypanel", effect = "reveal"),
+      ),
     
     
     # main
-    f7SmartSelect(virtualList = TRUE, # because of the many elements in the list
-                  inputId = "selectTZ", 
-                  label = "Select city to add", 
-                  choices = NULL, 
-                  selected = NULL,
-                  openIn = "popup", 
-                  multiple = FALSE, 
-                  closeOnSelect = TRUE, searchbarPlaceholder = "search",
-                  popupCloseLinkText = "Cancel"),
+    f7SmartSelect(
+      virtualList = TRUE, # because of the many elements in the list
+      inputId = "selectTZ", 
+      label = "Select city to add", 
+      choices = NULL, 
+      selected = NULL,
+      openIn = "popup", 
+      multiple = FALSE, 
+      closeOnSelect = TRUE, searchbarPlaceholder = "search",
+      popupCloseLinkText = "Cancel"),
     
-    f7SmartSelect(#virtualList = TRUE, # because of the many elements in the list
-                  inputId = "selectTZcurrent", 
-                  label = "Select city to remove", 
-                  choices = c("Berlin, DE", "New York, US", "Tokyo, JP"), 
-                  selected = NULL,
-                  openIn = "popup", 
-                  multiple = FALSE, 
-                  closeOnSelect = TRUE, 
-                  popupCloseLinkText = "Cancel"),
-    
-    
-    
-    f7List(id = "mylist"),
+    f7SmartSelect(
+      #virtualList = TRUE, # because of the many elements in the list
+      inputId = "selectTZcurrent", 
+      label = "Select city to remove", 
+      choices = c("Berlin, DE", "New York, US", "Tokyo, JP"), 
+      selected = NULL,
+      openIn = "popup", 
+      multiple = FALSE, 
+      closeOnSelect = TRUE, 
+      popupCloseLinkText = "Cancel"),
+    f7List(id = "mylist")
     
     #f7Popup(id = "mypopup", "to be updated"),
-    
-   toolbar = NULL 
   )
 )
   
 # Define server logic to show current time, update every second ----
 ########################### server ##########################
 server <- function(input, output, session) {
-  sever()
+  #sever()
   #session$allowReconnect(TRUE)
  
-   # try to get client timezone
+  # try to get client timezone
   observeEvent(input$client_timezone, {
     print(input$client_timezone)
     print(input$client_offset)
-    f7Toast(HTML(paste0("Your timezone is: <br><b>", 
-                        input$client_timezone, "</b>", "<br>", 
-                        "(UTC ", sprintf("%+.0f", -input$client_offset/60), " hours)") # the client offset is UTC relative to client!!
-                 ), 
-            position = "center", 
-            closeButton = F, closeTimeout = 3000, icon = f7Icon("timer"))
+    f7Toast(HTML(
+      paste0(
+        "Your timezone is: <br><b>", 
+        input$client_timezone, "</b>", "<br>", 
+        "(UTC ", sprintf("%+.0f", -input$client_offset/60), " hours)") # the client offset is UTC relative to client!!
+      ), 
+    position = "center", 
+    closeButton = F, closeTimeout = 3000, icon = f7Icon("timer"))
     #print(input$client_offset)
   })
   
   itemsToHide <- c("selectTZ", "selectTZcurrent")
   lapply(itemsToHide, shinyjs::hide)
   
-  updateF7SmartSelect("selectTZ", choices = cities$value)
-  
+  updateF7SmartSelect("selectTZ", choices = cities$value, session = session)
   
   # emulate click, show in popup
-  observeEvent(input$appendItem, ignoreInit = TRUE, {
-      shinyjs::click(id = "selectTZ")
-      #shinyjs::show("selectTZ")
+  observeEvent(
+    input$appendItem, ignoreInit = TRUE, {
+    shinyjs::click(id = "selectTZ")
+    #shinyjs::show("selectTZ")
   })
   
   # emulate click on current items list
-  observeEvent(input$removeItem, ignoreInit = TRUE, {
-      shinyjs::click(id = "selectTZcurrent")
+  observeEvent(
+    input$removeItem, ignoreInit = TRUE, {
+    shinyjs::click(id = "selectTZcurrent")
   })
   
   # observer to close panel on degree select
-  observeEvent(input$degrees, ignoreInit = TRUE, {
+  observeEvent(
+    input$degrees, ignoreInit = TRUE, {
     updateF7Panel(id = "mypanel")
   })
   
   # close panel on language select
-  observeEvent(input$language, ignoreInit = TRUE, {
+  observeEvent(
+    input$language, ignoreInit = TRUE, {
     updateF7Panel(id = "mypanel")
   })
-  
   
   # main server
   #  track current list status

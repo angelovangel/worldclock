@@ -1,44 +1,55 @@
-# get forecast from openweathermap directly
+# current and forecast 5 days are free
 
-get_forecast <- function(id, timestamps = 8) {
+# https://openweathermap.org/current
+# https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API key}
+
+# https://openweathermap.org/forecast5
+# api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API key}
+
+get_weather <- function(endpoint = 'forecast', lat, lon, apikey, language = 'en') {
+  # endpoint is either 'weather' or 'forecast'
   require(httr)
   require(jsonlite)
   require(dplyr)
   
   api_key <- Sys.getenv("api_key")
-  call <- paste0("http://api.openweathermap.org/data/2.5/forecast/daily?id=", id, "&cnt=", timestamps, "&appid=", api_key)
+  call <- paste0(
+    "https://api.openweathermap.org/data/2.5/", endpoint,
+    "?lat=", lat, 
+    "&lon=", lon, 
+    "&appid=", api_key, 
+    "&lang=", language
+  )
+  
   res <- httr::GET(call)
   data <- jsonlite::fromJSON(rawToChar(res$content))
   
+  if (data$cod == "200") {
+    data
+  } else {
+    simpleError("No data obtained from openweathermap.org")
+  }
   
-  return(
-    list(
-      time = data$list$dt_txt,
-      temp = data$list$main$temp,
-      mintemp = min(data$list$main$temp, na.rm = T),
-      maxtemp = max(data$list$main$temp, na.rm = T),
-      main = bind_rows(data$list$weather)[["main"]],
-      description = bind_rows(data$list$weather)[["description"]],
-      icon = bind_rows(data$list$weather)[["icon"]]
-    )
-  )
 }
 
-# https://openweathermap.org/api/one-call-api
-get_forecast_onecall <- function(lat, lon, exclude = "minutely,hourly", apikey, language) {
+# https://openweathermap.org/forecast5
+# api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API key}
+
+get_forecast_5days <- function(lat, lon, apikey, language) {
   require(httr)
   require(jsonlite)
   require(dplyr)
   
-  lat <- round(lat, 2) #required by the api
-  lon <- round(lon, 2)
+  #lat <- round(lat, 2) #required by the api
+  #lon <- round(lon, 2)
   
   api_key <- Sys.getenv("api_key")
-  call <- paste0("https://api.openweathermap.org/data/2.5/weather?lat=", lat, 
-                 "&lon=", lon, 
-                 "&exclude=", exclude, 
-                 "&appid=", api_key, 
-                 "&lang=", language)
+  call <- paste0(
+    "https://api.openweathermap.org/data/2.5/forecast?lat=", lat, 
+    "&lon=", lon, 
+    "&appid=", api_key, 
+    "&lang=", language
+  )
   res <- httr::GET(call)
   data <- jsonlite::fromJSON(rawToChar(res$content))
   
