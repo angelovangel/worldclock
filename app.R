@@ -13,7 +13,7 @@ source("R/global.R")
 source("R/get_forecast.R")
 
 # to acces on the lan
-#options(shiny.host = "0.0.0.0", shiny.port = 8888)
+options(shiny.host = "0.0.0.0", shiny.port = 8888)
 
 cities <- readRDS("data/cities500k.rds")
 
@@ -61,10 +61,11 @@ ui <- f7Page(
   tags$script(src = "getClientTimezone.js"),
   #useSever(),
   
-  # pwa(domain = "http://165.22.73.243/worldclock/", 
-  #     output = "www", 
-  #     icon = "www/icons8-clock-500.png", 
-  #     title = "Clock and Weather")
+  pwa(domain = "http://165.22.73.243/worldclock/",
+      output = "www",
+      icon = "www/icons8-clock-500.png",
+      title = "Clock and Weather"
+  ),
   #skin = "ios",
   f7SingleLayout(
     #includeCSS("www/gradient.css"),
@@ -79,12 +80,12 @@ ui <- f7Page(
       title = tags$div(style = mystyle(fontsize = 18, fontweight = 400), "Settings"),
       #f7Radio("timeformat", "", choices = c(12, 24), selected = 24),
       f7Segment(
-        container = "row",
+        #container = "row",
         f7Button("appendItem", label = f7Icon("plus", color = "white") , color = "black", size = "large"),
         f7Button("removeItem", label = f7Icon("minus", color = "white"), color = "black", size = "large")
       ),
       f7Segment(
-        container = "row",
+        #container = "row",
         f7Button("reset", label = tags$div(style = mystyle(fontsize = 14, fontweight = 400), "Reset", f7Icon("arrow_counterclockwise", color = "white")), color = "black", size = "large"),
         f7Button("about", label = tags$div(style = mystyle(fontsize = 14, fontweight = 400), "About", f7Icon("app", color = "white")), color = "black", size = "large")
       ),
@@ -98,7 +99,7 @@ ui <- f7Page(
       virtualList = TRUE, # because of the many elements in the list
       inputId = "selectTZ", 
       label = "Select city to add", 
-      choices = NULL, 
+      choices = sort(cities$value), 
       selected = NULL,
       openIn = "popup", 
       multiple = FALSE, 
@@ -145,7 +146,7 @@ server <- function(input, output, session) {
   itemsToHide <- c("selectTZ", "selectTZcurrent")
   lapply(itemsToHide, shinyjs::hide)
   
-  updateF7SmartSelect("selectTZ", choices = cities$value, session = session)
+  #updateF7SmartSelect("selectTZ", choices = cities$value, session = session)
   
   # emulate click, show in popup
   observeEvent(
@@ -175,31 +176,39 @@ server <- function(input, output, session) {
   # main server
   #  track current list status
   currList <- c("Berlin, DE", "New York, US", "Tokyo, JP") # 
-  
   # start with a list of 3 time zones, otherwise strange things happen with the smartselect input
+  
   observe({
     lapply(currList, insertListItem, data = cities, degrees = input$degrees, timeformat = 24, clientoffset = input$client_offset, language = input$language)
   })
+  
   
   # insertUI when selected
   observeEvent(input$selectTZ, ignoreInit = TRUE, {
       myselection <- input$selectTZ
       
-      insertListItem(myselection, data = cities, 
-                     degrees = input$degrees, 
-                     timeformat = 24,
-                     clientoffset = input$client_offset)
+      currList <<- c(currList, myselection)
+      updateF7SmartSelect(
+        inputId = "selectTZcurrent", 
+        label = "Select city to remove", 
+        choices = currList, 
+        selected = NULL,
+        openIn = "popup", 
+        multiple = FALSE, 
+        closeOnSelect = TRUE, 
+        popupCloseLinkText = "Close"
+      )
+      print(currList)
+      
+      insertListItem(
+        myselection, data = cities, degrees = input$degrees, timeformat = 24, clientoffset = input$client_offset
+      )
       
       if(myselection == "Abu Dhabi, AE" && input$client_timezone == "Asia/Dubai") { # show only there...
           f7Toast(text = secret_text, position = "center", closeButton = F, closeTimeout = 3000, 
                   icon = f7Icon("heart", color = "red")
                   )
       }
-      # finally, update selectTZcurrent list
-      
-      currList <<- c(currList, myselection)
-      shinyMobile::updateF7SmartSelect(inputId = "selectTZcurrent", choices = currList, selected = NULL)
-      #print(paste0("ins-", currList))
       
       # and toggle panel
       updateF7Panel(id = "mypanel")
@@ -222,7 +231,16 @@ server <- function(input, output, session) {
     
     print(paste0("del-", currList))
     
-    shinyMobile::updateF7SmartSelect(inputId = "selectTZcurrent", choices = currList, selected = NULL)
+    updateF7SmartSelect(
+        inputId = "selectTZcurrent", 
+        label = "Select city to remove", 
+        choices = currList, 
+        selected = NULL,
+        openIn = "popup", 
+        multiple = FALSE, 
+        closeOnSelect = TRUE, 
+        popupCloseLinkText = "Close"
+    )
     # and toggle panel
     updateF7Panel(id = "mypanel")
     

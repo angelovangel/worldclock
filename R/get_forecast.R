@@ -6,7 +6,7 @@
 # https://openweathermap.org/forecast5
 # api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API key}
 
-get_weather <- function(endpoint = 'forecast', lat, lon, apikey, language = 'en') {
+get_weather <- function(endpoint = 'forecast', lat, lon, apikey, language = 'en', units = 'standard') {
   # endpoint is either 'weather' or 'forecast'
   require(httr)
   require(jsonlite)
@@ -17,7 +17,7 @@ get_weather <- function(endpoint = 'forecast', lat, lon, apikey, language = 'en'
     "https://api.openweathermap.org/data/2.5/", endpoint,
     "?lat=", lat, 
     "&lon=", lon, 
-    "&appid=", api_key, 
+    "&appid=", api_key, "&units=", units, 
     "&lang=", language
   )
   

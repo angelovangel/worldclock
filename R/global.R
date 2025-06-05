@@ -48,9 +48,9 @@ get_weather_icon <- function(iconcode) {
 }
 
 # define style for fonts
-mystyle <- function(fontsize, align = "left", color = "LightGrey", fontweight = 300) {
+mystyle <- function(fontsize, align = "left", color = "LightGrey", fontweight = 300, fontstyle = "normal") {
   paste0("font-family: 'Helvetica Neue Ultra Thin', 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial; font-size:", 
-         fontsize, "px; text-align: ", align, "; color: ", color, ";", "font-weight: ", fontweight, ";" 
+         fontsize, "px;", "font-style:", fontstyle, "; text-align: ", align, "; color: ", color, "; font-weight: ", fontweight, ";" 
   )
 }
 
@@ -65,11 +65,17 @@ my_rainbow <- c("violet",
                 "dark red")
 
 # pass temp in K as argument, return hex
-my_temp_color <- function(temp) {
+my_temp_color <- function(temp, units = 'standard') {
+  # units are: standard, metric, imperial
+  temprange <- case_when(
+    units == 'standard' ~ c(223.15, 323.15),
+    units == 'metric' ~ c(-50, 50),
+    units == 'imperial' ~ c(-58, 122)
+  )
   # set scale 
   # color ramp used for temp gradient
   myramp <- scales::colour_ramp(my_rainbow, na.color = "#D5D8DC")
-  scaled_temp <- scales::rescale( temp, from = c(223.15, 323.15), to = c(0,1) ) # -50 to +50 C
+  scaled_temp <- scales::rescale( temp, from = temprange, to = c(0,1) ) # -50 to +50 C
   myramp(scaled_temp)
 }
 
@@ -81,9 +87,9 @@ my_uvi_color <- function(uvi) {
 }
 
 # generate gradients for a div, input temps, output style with colors
-my_temp_gradient <- function(tempmin, tempmax, forecastmin, forecastmax) {
-  color1 <- my_temp_color(tempmin)
-  color2 <- my_temp_color(tempmax)
+my_temp_gradient <- function(tempmin, tempmax, forecastmin, forecastmax, units = 'metric') {
+  color1 <- my_temp_color(tempmin, units = units)
+  color2 <- my_temp_color(tempmax, units = units)
   
   # stop1 is the percentage fill on the left side
   stop1 <- scales::rescale(tempmin, to = c(0, 100),from = c(forecastmin, forecastmax))
@@ -118,6 +124,8 @@ my_uvi_gradient <- function(uvi_current) {
   )
 }
 
+take_middle <- function(vec) {vec[ceiling(length(vec)/2)]}
+
 insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeformat = c(12, 24), clientoffset, language = "en") {
   
   # call once
@@ -133,44 +141,53 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
   weather <- get_weather(endpoint = 'weather', lat = lat, lon = lon, apikey = api_key, language = language)
   iconurl <- get_weather_icon(weather$weather$icon[1])
   
-  forecast <- get_weather(endpoint = 'forecast', lat = lat, lon = lon, apikey = api_key, language = language)
+  forecast <- get_weather(endpoint = 'forecast', lat = lat, lon = lon, apikey = api_key, language = language, units = 'metric')
   
   # chanceOfRain is a vector of length 8, this returns pop for days where there is "Rain" in the weather$daily_main
-  # chanceOfRain <- case_when(
-  #   str_detect(weather$daily_main, "(S|s)now") ~ paste0(", ", "\U2744" ," ", weather$daily_pop * 100, "%"),
-  #   weather$daily_pop > 0 ~ paste0(" ", "\U1F327" ," ", weather$daily_pop * 100, "%"),
-  #   weather$daily_pop == 0 ~ "",
-  #   TRUE ~ ""
-  # )
+  chanceOfRain <- case_when(
+    #str_detect(weather$daily_main, "(S|s)now") ~ paste0(", ", "\U2744" ," ", weather$daily_pop * 100, "%"),
+    forecast$list$pop > 0 ~ paste0(" ", "\U1F327" ," ", forecast$list$pop * 100, " %"),
+    forecast$list$pop == 0 ~ "",
+    TRUE ~ ""
+  )
   
-    
+  # get these from forecast
+  forecast_table <- tibble(
+      dt = as.POSIXct(forecast$list$dt),
+      pod = forecast$list$sys$pod,
+      temp = forecast$list$main$temp, 
+      pop = forecast$list$pop,
+      main = sapply(forecast$list$weather, function(x) x[]$main),
+      desc = sapply(forecast$list$weather, function(x) x[]$description),
+      icon = sapply(forecast$list$weather, function(x) x[]$icon)
+      )
   
+  forecast_daily <- forecast_table %>%
+    mutate(day = as_date(dt)) %>% 
+    group_by(day) %>% 
+    summarise(
+      daymint = min(temp, na.rm = T),
+      daymaxt = max(temp, na.rm = T),
+      pop = max(pop, na.rm = T),
+      main = take_middle(main),
+      desc = take_middle(desc),
+      icon = take_middle(icon)
+    )
+  
+    #group_by(day) %>% 
+    #summarise(dmint = min(temp), dmaxt = max(temp))
                  
   if(degrees == "°C") { 
       temperature <- sprintf("%+3.0f", weather$main$temp - 273.15)
       feels_like <- sprintf("%+3.0f", weather$main$feels_like - 273.15)
       tempmin <- sprintf("%+3.0f", weather$main$temp_min - 273.15)
       tempmax <- sprintf("%+3.0f", weather$main$temp_max - 273.15)
-      
-      #daily_tempday <- formatC(weather$daily_tempday - 273.15, format = "f", digits = 1) 
-      #daily_tempmin <- sprintf("%+3.0f", weather$daily_tempmin - 273.15) 
-      #daily_tempmax <- sprintf("%+3.0f", weather$daily_tempmax - 273.15) 
-      #forecast_tempmin <- sprintf("%+3.0f", weather$forecast_tempmin - 273.15)
-      #forecast_tempmax <- sprintf("%+3.0f", weather$forecast_tempmax - 273.15)
-      
       #dew_point <- sprintf("%+3.0f", weather$dew_point - 273.15)
     } else { 
       temperature <- round((weather$main$temp * 9/5) - 459.67, 0)
       feels_like <- round((weather$main$feels_like * 9/5) - 459.67, 0)
       tempmin <- round((weather$main$temp_min * 9/5) - 459.67, 0)
       tempmax <- round((weather$main$temp_max * 9/5) - 459.67, 0)
-      
-      #daily_tempday <- round((weather$daily_tempday * 9/5) - 459.67, 0)
-      #daily_tempmin <- round((weather$daily_tempmin * 9/5) - 459.67, 0)
-      #daily_tempmax <- round((weather$daily_tempmax * 9/5) - 459.67, 0)
-      #forecast_tempmin <- round((weather$forecast_tempmin * 9/5) - 459.67, 0)
-      #forecast_tempmax <- round((weather$forecast_tempmax * 9/5) - 459.67, 0)
-      
       #dew_point <- round((weather$dew_point * 9/5) - 459.67, 0)
     }
   
@@ -227,157 +244,134 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
           routable = T,
           href = "#", # this is used here just to add the class needed to make it look like a clickable link
           media = localicon(list(src = iconurl, width = "40px")),
-          title = tags$div( style = mystyle(fontsize = 40, color = "white", fontweight = 200), mytime ), 
           header = tags$div(style = mystyle(fontsize = 16, fontweight = 350), selection), 
-          footer = tags$div(style = mystyle(fontsize = 13), listItemOffset),
+          title = tags$div( style = mystyle(fontsize = 40, color = "white", fontweight = 200), mytime ), 
           tags$div(
-            style = mystyle(fontsize = 18, fontweight = 350, align = "right", color = my_temp_color(weather$main$temp) ), 
+            style = mystyle(fontsize = 18, fontweight = 350, align = "left", color = my_temp_color(weather$main$temp) ), 
             paste0(temperature, "°"), 
-            #tags$span(style = mystyle(fontsize = 12, color = "LightGrey"), chanceOfRain[1]),
-            tags$div(style = mystyle(fontsize = 15), weather_description), # today
-          )
+            tags$span(style = mystyle(fontsize = 12, align = 'right'), chanceOfRain[1]),
+            tags$div(style = mystyle(fontsize = 15, fontstyle = "italic"), weather_description), # today
+          ),
+          footer = tags$div(style = mystyle(fontsize = 13), listItemOffset)
         )
       )
     )
   )
-  #open popup #=============================================
   
-  # onclick(paste0("item_", cityid), 
-  #         shinyMobile::updateF7Popup(id = paste0("popup_", cityid))
-  # )
-  #============================================================================
-  
+  # open popup
+   onclick(paste0("item_", cityid), 
+    shinyMobile::f7Popup(
+      id = paste0('popup_', cityid), 
+      title = tags$div(style = mystyle(fontsize = 15), paste0("Now: ", selection)),
+      backdrop = T, fullsize = F, closeByBackdropClick = T, closeOnEscape = T, page = T,
+      f7List(
+        f7ListItem(
+          # temp
+          title = tags$div(
+            style = mystyle(fontsize = 22, color = my_temp_color(weather$main$temp)),
+            paste0(temperature, "°")
+          ),
+          # tags$div(
+          #   style = mystyle(fontsize = 13), paste0("L: ",tempmin, "°", " H: ", tempmax, "°")
+          # ),
+          footer = tags$div(
+            style = mystyle(fontsize = 13, color = "LightGrey"),
+            paste0("feels like ", feels_like, "°")
+          ),
+          media = f7Icon("thermometer")
+        ),
+        
+        # humidity
+        f7ListItem(
+          title = tags$div(
+            style = mystyle(fontsize = 22, color = "LightGrey"),
+            paste0(weather$main$humidity, " %")
+          ),
+          footer = tags$div(style = mystyle(fontsize = 13, color = "LightGrey"), "Humidity"),
+          media = f7Icon("waveform")
+        ),
+        
+        # clouds
+        f7ListItem(
+          title = tags$div(
+            style = mystyle(fontsize = 22, color = "LightGrey"),
+            paste0(weather$clouds$all, " %")
+          ),
+          footer = tags$div(style = mystyle(fontsize = 13, color = "LightGrey"), "Clouds"),
+          media = f7Icon("cloud")
+        ),
+        # wind
+        f7ListItem(
+          tags$div(
+            style = mystyle(fontsize = 13), paste0("direction ", weather$wind$deg, "°")
+          ),
+          title = tags$div(
+            style = mystyle(fontsize = 22, color = "LightGrey"),
+            paste0(weather$wind$speed, " m/s")
+          ),
+          footer = tags$div(style = mystyle(fontsize = 13, color = "LightGrey"), "Wind"),
+          media = f7Icon("wind")
+        ),
+        # pressure
+        f7ListItem(
+          title = tags$div(
+            style = mystyle(fontsize = 22, color = "LightGrey"),
+            paste0(weather$main$pressure, " hPa")
+          ),
+          footer = tags$div(style = mystyle(fontsize = 13, color = "LightGrey"), "Pressure"),
+          media = f7Icon("arrow_up_down")
+        ),
+        # visibility   
+        f7ListItem(
+          title = tags$div(
+            style = mystyle(fontsize = 22, color = "LightGrey"),
+            paste0(weather$visibility, " m")
+          ),
+          footer = tags$div(style = mystyle(fontsize = 13, color = "LightGrey"), "Visibility"),
+          media = f7Icon("chevron_up")
+        )
+      ),
+      # Forecast
+      tags$h3(style = mystyle(fontsize = 15), paste0("Forecast: ", selection)),
+      f7List(
+        #tags$div(style = mystyle(fontsize = 15), "5 days forecast"),
+        lapply(seq(forecast_daily$main), function(j) { # these are the forecast points
+          iconpath <- get_weather_icon(forecast_daily$icon[j])
+
+          f7ListItem(
+            tags$div(style = "margin: 0; width: 120px; font-size: 13px",
+              paste0( round(forecast_daily$daymint[j], 0), "°"),
+              tags$span(style = "display: block; float: right; color: LightGrey; font-size: 13px",
+              paste0( round(forecast_daily$daymaxt[j], 0), "°")
+              )
+            ),
+            #---------------------------
+            tags$div(
+              style = my_temp_gradient(
+                forecast_daily$daymint[j],
+                forecast_daily$daymaxt[j],
+                min(forecast_daily$daymint, na.rm = T),
+                max(forecast_daily$daymaxt, na.rm = T), units = 'metric')
+            ),
+            #---------------------------
+            title = tags$div(
+              style = mystyle( fontsize = 22, color = "white" ),
+              forecast_daily$day[j]
+            ),
+            header = forecast_daily$day[j],
+            #header = format.POSIXct(forecast_table$dt[j], format = "%e %b"),
+            footer = tags$div(style = mystyle( fontsize = 13), paste0(forecast_table$desc[j]) ),
+            media = localicon(list(src = iconpath, width = "40px"))
+          )
+        })
+      )
+    )
+   )
 }
 
-insertDetailsPopup <- function() {
-  # generate this server side, dont use updateF7Popup
-  # https://github.com/RinteRface/shinyMobile/blob/90e09384c040ba69c14293a49fc182e8d6ef26a8/NEWS.md?plain=1#L140
-  f7Popup(closeOnEscape = T, backdrop = T,
-          id = paste0("popup_", cityid),
-          title = tags$div(style = mystyle(fontsize = 15), paste0(selection)), 
-          swipeToClose = F, fullsize = T,
-          # Detailed weather for selection
-          #--------------
-          f7List(
-            tags$div(style = mystyle(fontsize = 15), weather_description),
-            f7ListItem(
-              # temp
-              tags$div(
-                style = mystyle(fontsize = 13), paste0(tempmin, "°", "/", tempmax, "°")
-              ),
-              title = tags$div(
-                style = mystyle(fontsize = 22, color = my_temp_color(weather$temp)),
-                paste0(temperature, "°")
-              ),
-              footer = tags$div(
-                style = mystyle(fontsize = 13, color = "LightGrey"),
-                paste0("feels like ", feels_like, "°")
-              ),
-              media = f7Icon("thermometer")
-            )
-            # humidity and dew
-            # f7ListItem(
-            #   tags$div(style = mystyle(fontsize = 13), paste0("dew point ", dew_point, "°")),
-            #   title = tags$div(style = mystyle(fontsize = 22, color = "LightGrey"), 
-            #                    paste0(20, "%")
-            #   ),
-            #   footer = tags$div(style = mystyle(fontsize = 13, color = "LightGrey"), "Humidity"),
-            #   media = f7Icon("waveform")
-            # ),
-            # UV index
-            # f7ListItem(
-            #   tags$div(style = "margin: 0; width: 100px; font-size: 13px",
-            #            paste0( "bla" )),
-            #   tags$div(style = my_uvi_gradient(uvi_current = weather$uvi)),
-            #   
-            #   title = tags$div(style = mystyle(fontsize = 22, color = my_uvi_color(weather$uvi)),
-            #                    paste0(weather$uvi)
-            #                             ), 
-            #   footer = tags$div(style = mystyle(fontsize = 13, color = "LightGrey"), "UV index"),
-            #   media = f7Icon("rays")
-            #   ),
-            
-            
-            # clouds
-            # f7ListItem(
-            #   title = tags$div(style = mystyle(fontsize = 22, color = "LightGrey"), 
-            #                    paste0(weather$clouds, "%")
-            #                    ),
-            #   footer = tags$div(style = mystyle(fontsize = 13, color = "LightGrey"), "Clouds"),
-            #   media = f7Icon("cloud")
-            #   ),
-            
-            # wind
-            # f7ListItem(
-            #   tags$div(style = mystyle(fontsize = 13), paste0("wind direction ", weather$wind_deg, "°")),
-            #   title = tags$div(style = mystyle(fontsize = 22, color = "LightGrey"), 
-            #                    paste0(weather$wind_speed, " m/s")
-            #                    ),
-            #   footer = tags$div(style = mystyle(fontsize = 13, color = "LightGrey"), "Wind"),
-            #   media = f7Icon("wind")
-            #   ),
-            
-            # pressure
-            # f7ListItem(
-            #   title = tags$div(style = mystyle(fontsize = 22, color = "LightGrey"), 
-            #                    paste0(weather$pressure, " hPa")
-            #                    ),
-            #   footer = tags$div(style = mystyle(fontsize = 13, color = "LightGrey"), "Pressure"),
-            #   media = f7Icon("arrow_up_down")
-            #   ),
-            
-            # visibility   
-            # f7ListItem(
-            #   title = tags$div(style = mystyle(fontsize = 22, color = "LightGrey"), 
-            #                    paste0(weather$visibility, " m")
-            #                    ),
-            #   footer = tags$div(style = mystyle(fontsize = 13, color = "LightGrey"), "Visibility"),
-            #   media = f7Icon("chevron_up")
-            #   ),
-            
-            # sunrise/sunset
-            # f7ListItem(
-            #   tags$div(style = mystyle(fontsize = 13), mysunset, f7Icon("sunset")),
-            #   title = tags$div(style = mystyle(fontsize = 22, color = "LightGrey"), 
-            #                    paste0(mysunrise)
-            #   ),
-            #   footer = tags$div(style = mystyle(fontsize = 13, color = "LightGrey"), "Sunrise/sunset"),
-            #   media = f7Icon("sunrise")
-            #   
-            # ),
-          )
-          
-          # 7 days forecast
-          #------------
-          #tags$h3(style = mystyle(fontsize = 18), "7 days forecast"),
-          # f7List(
-          #   tags$div(style = mystyle(fontsize = 15), "7 days forecast"),
-          #   lapply(seq(weather$daily_main), function(j) { # these are the forecast points
-          #     iconpath <- get_weather_icon( weather$daily_icon[j] )
-          #     
-          #     f7ListItem(
-          #       tags$div(style = "margin: 0; width: 120px; font-size: 13px",
-          #                paste0( daily_tempmin[j], "°"), 
-          #       tags$span(style = "display: block; float: right; color: LightGrey; font-size: 13px", 
-          #                paste0(daily_tempmax[j], "°"))
-          #       ), 
-          #       #---------------------------
-          #       tags$div( style = my_temp_gradient(weather$daily_tempmin[j], 
-          #                                          weather$daily_tempmax[j], 
-          #                                          weather$forecast_tempmin, 
-          #                                          weather$forecast_tempmax)
-          #                 ),
-          #       #---------------------------
-          #       title = tags$div(style = mystyle( fontsize = 22, color = "white" ),
-          #                      format.POSIXct(anytime(weather$daily_time[j] + weather$tz_offset, asUTC = T), 
-          #                                     format = "%a")
-          #                      ),
-          #       header = format.POSIXct(anytime(weather$daily_time[j] + weather$tz_offset, asUTC = T), 
-          #                               format = "%e %b"),
-          #       footer = tags$div(style = mystyle( fontsize = 13), paste0(weather$daily_description[j], chanceOfRain[j]) ),
-          #       media = icon(list(src = iconpath, width = "40px"), lib = "local"),
-          #       )
-          #   }) 
-          # )
-  )
-}
+#open popup #=============================================
+
+# onclick(paste0("item_", cityid), 
+#         shinyMobile::updateF7Popup(id = paste0("popup_", cityid))
+# )
+#============================================================================
