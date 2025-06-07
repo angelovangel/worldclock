@@ -56,21 +56,20 @@ mystyle <- function(fontsize, align = "left", color = "LightGrey", fontweight = 
 
 my_rainbow <- c("violet", 
                 "blue", 
-                "sky blue",
                 "cyan", 
                 "green", 
                 "yellow", 
                 "orange",
                 "red", 
-                "dark red")
+                "darkred")
 
 # pass temp in K as argument, return hex
-my_temp_color <- function(temp, units = 'standard') {
+my_temp_color <- function(temp, units = units) {
   # units are: standard, metric, imperial
   temprange <- case_when(
-    units == 'standard' ~ c(223.15, 323.15),
-    units == 'metric' ~ c(-50, 50),
-    units == 'imperial' ~ c(-58, 122)
+    units == 'standard' ~ c(243.15, 318.15),
+    units == 'metric' ~ c(-30, 45),
+    units == 'imperial' ~ c(-22, 113)
   )
   # set scale 
   # color ramp used for temp gradient
@@ -87,7 +86,7 @@ my_uvi_color <- function(uvi) {
 }
 
 # generate gradients for a div, input temps, output style with colors
-my_temp_gradient <- function(tempmin, tempmax, forecastmin, forecastmax, units = 'metric') {
+my_temp_gradient <- function(tempmin, tempmax, forecastmin, forecastmax, units = units) {
   color1 <- my_temp_color(tempmin, units = units)
   color2 <- my_temp_color(tempmax, units = units)
   
@@ -126,7 +125,7 @@ my_uvi_gradient <- function(uvi_current) {
 
 take_middle <- function(vec) {vec[ceiling(length(vec)/2)]}
 
-insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeformat = c(12, 24), clientoffset, language = "en") {
+insertListItem <- function(selection, data, timeformat = c(12, 24), clientoffset, language = "en", units = units) {
   
   # call once
   # selection is "Berlin, DE", from there we get the lat lon and make one API call
@@ -138,10 +137,10 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
   cityid <- hit$id
   
   #weather 
-  weather <- get_weather(endpoint = 'weather', lat = lat, lon = lon, apikey = api_key, language = language)
+  weather <- get_weather(endpoint = 'weather', lat = lat, lon = lon, apikey = api_key, language = language, units = units)
   iconurl <- get_weather_icon(weather$weather$icon[1])
   
-  forecast <- get_weather(endpoint = 'forecast', lat = lat, lon = lon, apikey = api_key, language = language, units = 'metric')
+  forecast <- get_weather(endpoint = 'forecast', lat = lat, lon = lon, apikey = api_key, language = language, units = units)
   
   # chanceOfRain is a vector of length 8, this returns pop for days where there is "Rain" in the weather$daily_main
   chanceOfRain <- case_when(
@@ -150,6 +149,9 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
     forecast$list$pop == 0 ~ "",
     TRUE ~ ""
   )
+  
+  temperature <- sprintf("%+3.0f", weather$main$temp)
+  feels_like <- sprintf("%+3.0f", weather$main$feels_like)
   
   # get these from forecast
   forecast_table <- tibble(
@@ -177,19 +179,19 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
     #group_by(day) %>% 
     #summarise(dmint = min(temp), dmaxt = max(temp))
                  
-  if(degrees == "°C") { 
-      temperature <- sprintf("%+3.0f", weather$main$temp - 273.15)
-      feels_like <- sprintf("%+3.0f", weather$main$feels_like - 273.15)
-      tempmin <- sprintf("%+3.0f", weather$main$temp_min - 273.15)
-      tempmax <- sprintf("%+3.0f", weather$main$temp_max - 273.15)
-      #dew_point <- sprintf("%+3.0f", weather$dew_point - 273.15)
-    } else { 
-      temperature <- round((weather$main$temp * 9/5) - 459.67, 0)
-      feels_like <- round((weather$main$feels_like * 9/5) - 459.67, 0)
-      tempmin <- round((weather$main$temp_min * 9/5) - 459.67, 0)
-      tempmax <- round((weather$main$temp_max * 9/5) - 459.67, 0)
-      #dew_point <- round((weather$dew_point * 9/5) - 459.67, 0)
-    }
+  # if(degrees == "°C") { 
+  #     temperature <- sprintf("%+3.0f", weather$main$temp - 273.15)
+  #     feels_like <- sprintf("%+3.0f", weather$main$feels_like - 273.15)
+  #     tempmin <- sprintf("%+3.0f", weather$main$temp_min - 273.15)
+  #     tempmax <- sprintf("%+3.0f", weather$main$temp_max - 273.15)
+  #     #dew_point <- sprintf("%+3.0f", weather$dew_point - 273.15)
+  #   } else { 
+  #     temperature <- round((weather$main$temp * 9/5) - 459.67, 0)
+  #     feels_like <- round((weather$main$feels_like * 9/5) - 459.67, 0)
+  #     tempmin <- round((weather$main$temp_min * 9/5) - 459.67, 0)
+  #     tempmax <- round((weather$main$temp_max * 9/5) - 459.67, 0)
+  #     #dew_point <- round((weather$dew_point * 9/5) - 459.67, 0)
+  #   }
   
   weather_description <- str_flatten(weather$weather$description, collapse = ", ")
   mysunrise <- format.POSIXct(anytime(weather$sys$sunrise + weather$timezone, asUTC = T), format = "%H:%M")
@@ -239,6 +241,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
     selector = "#mylist", where = "beforeEnd",
     ui = tags$div( 
       id = paste0("item_", cityid), # use cityid as tag.. should be ok
+      #tags$hr(),
       f7Swipeout(
         f7ListItem(
           routable = T,
@@ -247,10 +250,10 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
           header = tags$div(style = mystyle(fontsize = 16, fontweight = 350), selection), 
           title = tags$div( style = mystyle(fontsize = 40, color = "white", fontweight = 200), mytime ), 
           tags$div(
-            style = mystyle(fontsize = 18, fontweight = 350, align = "left", color = my_temp_color(weather$main$temp) ), 
+            style = mystyle(fontsize = 18, fontweight = 350, align = "left", color = my_temp_color(weather$main$temp, units = units) ), 
             paste0(temperature, "°"), 
-            tags$span(style = mystyle(fontsize = 12, align = 'right'), chanceOfRain[1]),
-            tags$div(style = mystyle(fontsize = 15, fontstyle = "italic"), weather_description), # today
+            tags$span(style = mystyle(fontsize = 14, align = 'right'), chanceOfRain[1], weather_description),
+            #tags$div(style = mystyle(fontsize = 15, fontstyle = "italic"), weather_description), # today
           ),
           footer = tags$div(style = mystyle(fontsize = 13), listItemOffset)
         )
@@ -268,7 +271,7 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
         f7ListItem(
           # temp
           title = tags$div(
-            style = mystyle(fontsize = 22, color = my_temp_color(weather$main$temp)),
+            style = mystyle(fontsize = 22, color = my_temp_color(weather$main$temp, units = units)),
             paste0(temperature, "°")
           ),
           # tags$div(
@@ -320,22 +323,22 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
           ),
           footer = tags$div(style = mystyle(fontsize = 13, color = "LightGrey"), "Pressure"),
           media = f7Icon("arrow_up_down")
-        ),
-        # visibility   
-        f7ListItem(
-          title = tags$div(
-            style = mystyle(fontsize = 22, color = "LightGrey"),
-            paste0(weather$visibility, " m")
-          ),
-          footer = tags$div(style = mystyle(fontsize = 13, color = "LightGrey"), "Visibility"),
-          media = f7Icon("chevron_up")
         )
+        # visibility   
+        # f7ListItem(
+        #   title = tags$div(
+        #     style = mystyle(fontsize = 22, color = "LightGrey"),
+        #     paste0(weather$visibility, " m")
+        #   ),
+        #   footer = tags$div(style = mystyle(fontsize = 13, color = "LightGrey"), "Visibility"),
+        #   media = f7Icon("chevron_up")
+        # )
       ),
       # Forecast
       tags$h3(style = mystyle(fontsize = 15), paste0("Forecast: ", selection)),
       f7List(
         #tags$div(style = mystyle(fontsize = 15), "5 days forecast"),
-        lapply(seq(forecast_daily$main), function(j) { # these are the forecast points
+        lapply(head(seq(forecast_daily$main), -1), function(j) { # these are the forecast points
           iconpath <- get_weather_icon(forecast_daily$icon[j])
 
           f7ListItem(
@@ -351,14 +354,14 @@ insertListItem <- function(selection, data, degrees = c("°C", "°F"), timeforma
                 forecast_daily$daymint[j],
                 forecast_daily$daymaxt[j],
                 min(forecast_daily$daymint, na.rm = T),
-                max(forecast_daily$daymaxt, na.rm = T), units = 'metric')
+                max(forecast_daily$daymaxt, na.rm = T), units = units)
             ),
             #---------------------------
             title = tags$div(
               style = mystyle( fontsize = 22, color = "white" ),
-              forecast_daily$day[j]
+              format(forecast_daily$day[j], format = "%a"),
             ),
-            header = forecast_daily$day[j],
+            header = format(forecast_daily$day[j], format = "%e %b"),
             #header = format.POSIXct(forecast_table$dt[j], format = "%e %b"),
             footer = tags$div(style = mystyle( fontsize = 13), paste0(forecast_table$desc[j]) ),
             media = localicon(list(src = iconpath, width = "40px"))

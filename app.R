@@ -71,6 +71,7 @@ ui <- f7Page(
     #includeCSS("www/gradient.css"),
     toolbar = NULL,
     navbar = f7Navbar(
+      bigger = T,
       title = tags$div(style = mystyle(fontsize = 18, fontweight = 400), "Clock and Weather"),
       leftPanel = F, 
       rightPanel = T
@@ -89,7 +90,7 @@ ui <- f7Page(
         f7Button("reset", label = tags$div(style = mystyle(fontsize = 14, fontweight = 400), "Reset", f7Icon("arrow_counterclockwise", color = "white")), color = "black", size = "large"),
         f7Button("about", label = tags$div(style = mystyle(fontsize = 14, fontweight = 400), "About", f7Icon("app", color = "white")), color = "black", size = "large")
       ),
-      f7Radio("degrees", "", choices = c("°C", "°F"), selected = "°C"),
+      f7Radio("degrees", "", choices = c("°C" = 'metric', "°F" = 'imperial'), selected = "metric"),
       f7Select("language", "Language", choices = lang_choices, selected = "en"),
       ),
     
@@ -179,7 +180,10 @@ server <- function(input, output, session) {
   # start with a list of 3 time zones, otherwise strange things happen with the smartselect input
   
   observe({
-    lapply(currList, insertListItem, data = cities, degrees = input$degrees, timeformat = 24, clientoffset = input$client_offset, language = input$language)
+    lapply(
+      currList, 
+      insertListItem, 
+      data = cities, timeformat = 24, clientoffset = input$client_offset, language = input$language, units = input$degrees)
   })
   
   
@@ -201,7 +205,7 @@ server <- function(input, output, session) {
       print(currList)
       
       insertListItem(
-        myselection, data = cities, degrees = input$degrees, timeformat = 24, clientoffset = input$client_offset
+        myselection, data = cities, timeformat = 24, clientoffset = input$client_offset, language = input$language, units = input$degrees
       )
       
       if(myselection == "Abu Dhabi, AE" && input$client_timezone == "Asia/Dubai") { # show only there...
